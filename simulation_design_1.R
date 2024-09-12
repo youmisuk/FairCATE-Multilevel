@@ -485,14 +485,14 @@ clusterEvalQ(cl, {
 })
 
 clusterExport(cl, c("run_iteration", "create_multileveldata_D1", "GLMM_model", "fairCATE_multilevel"))
-results <- parLapply(cl, 1:500, run_iteration)
+results <- parLapply(cl, 1:20, run_iteration)
 stopCluster(cl)
 
 time_1 <- Sys.time()
 
 time_1-time_0
 # save the results
-save(results, file = "Design_1_reproduce.rda")
+save(results, file = "Simulation_Design_1_results.rda")
 
 
 

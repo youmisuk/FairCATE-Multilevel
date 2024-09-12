@@ -10,7 +10,6 @@ library(Matrix)
 library(Rmosek)
 library(ggplot2)
 library(lme4)
-library(beepr)
 library(bartCause)
 library(grf)
 library(parallel)
@@ -687,14 +686,13 @@ clusterEvalQ(cl, {
 
 clusterExport(cl, c("run_iteration", "create_multileveldata_D2", "GLMM_model", 
                     "fairCATE_multilevel"))
-results <- parLapply(cl, 1:500, run_iteration)
+results <- parLapply(cl, 1:20, run_iteration)
 stopCluster(cl)
 # save the results
-save(results, file = "Design_2_reproduce.rda")
+save(results, file = "results/Simulation_Design_2_results.rda")
 
 time_1 <- Sys.time()
 
 time_1-time_0
 
-beep()
 
