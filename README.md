@@ -30,7 +30,7 @@ Please note that installing `Rmosek` package is a little bit different from the 
 #### 2.2.1 `functions.R`  
 This file contains four functions for GLMM model fitting, estimating fair CATE on multilevel data, and simulated data generating:  
 
-##### GLMM_model() 
+##### **GLMM_model()** 
 **Description:** fitting the outcome model and treatment model using GLMM method.  
 
   
@@ -48,14 +48,14 @@ GLMM_model <- function(data,
 
 **Arguments**  
 
-- data: a dataframe. You do not need to convert the multicategorical covariates into dummy (one-hot) codings before model fiiting. We recommend users to normalize all the continuous covariates in advance for a faster convergence in GLMM model fitting.  
-- outcome: a string to indicate the name of outcome vairable.  
-- treatment: a string to indicate the name of treatment variable. Treatment must be a binary variable for the current version.   
-- cluster: a string to indicate the name of the cluster id.  
-- multicategroical: a string array to specify all the multicategorical variables. Using `NULL` by default to indicate that there is no multicategorical variable in your dataframe. If specified, this function will automatically convert these multicategorical variables into one-hot codings. The multicategorical variable(s) must be in factor format.  
-- nAGQ: integer scalar, same to the argument in `glmer()` function from the `lme4` packages. Values greater than 1 produce than 1 produce greater accuracy in the evaluation of the log-likelihood at the expense of speed.  
-- fixed_intercept: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.  
-- gmler_Control: a list of correct class, resulting from `glmerControl()` containing control parameters. Same to the argument `control` from the `lme4` package. It is used to solve the non-convergence issue in fitting the GLMM model.  
+- `data`: a dataframe. You do not need to convert the multicategorical covariates into dummy (one-hot) codings before model fiiting. We recommend users to normalize all the continuous covariates in advance for a faster convergence in GLMM model fitting.  
+- `outcome`: a string to indicate the name of outcome vairable.  
+- `treatment`: a string to indicate the name of treatment variable. Treatment must be a binary variable for the current version.   
+- `cluster`: a string to indicate the name of the cluster id.  
+- `multicategroical`: a string array to specify all the multicategorical variables. Using `NULL` by default to indicate that there is no multicategorical variable in your dataframe. If specified, this function will automatically convert these multicategorical variables into one-hot codings. The multicategorical variable(s) must be in factor format.  
+- `nAGQ`: integer scalar, same to the argument in `glmer()` function from the `lme4` packages. Values greater than 1 produce than 1 produce greater accuracy in the evaluation of the log-likelihood at the expense of speed.  
+- `fixed_intercept`: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.  
+- `gmler_Control`: a list of correct class, resulting from `glmerControl()` containing control parameters. Same to the argument `control` from the `lme4` package. It is used to solve the non-convergence issue in fitting the GLMM model.  
 
 **Example**  
 ```
