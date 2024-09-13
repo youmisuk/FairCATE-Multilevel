@@ -59,6 +59,7 @@ GLMM_model <- function(data,
 
 **Example**  
 ```r
+# customize the optimizer and the maximal estimation iterations
 glmer_Control <- glmerControl(optimizer = "bobyqa",
                               optCtrl = list(maxfun=100000))
   
@@ -69,4 +70,9 @@ glmm_out <- GLMM_model(data = dat0, outcome = "Y",
                          n_AGQ = 2,
                          fixed_intercept = FALSE,
                          glmer_Control = glmer_Control)
+
+# check the fitted objects
+summary(glmm_out$outcome.LMM)
+summary(glmm_out$ps.GLMM)
 ```
+
