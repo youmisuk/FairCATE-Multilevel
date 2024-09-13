@@ -58,7 +58,7 @@ GLMM_model <- function(data,
 - `gmler_Control`: a list of correct class, resulting from `glmerControl()` containing control parameters. Same to the argument `control` from the `lme4` package. It is used to solve the non-convergence issue in fitting the GLMM model.  
 
 **Example**  
-```
+```r
 glmer_Control <- glmerControl(optimizer = "bobyqa",
                               optCtrl = list(maxfun=100000))
   
