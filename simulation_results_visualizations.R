@@ -5,7 +5,7 @@
 library(ggplot2)
 
 
-load("results/Simulation_Design_1_results.rda")
+load("results/Simulation_Design_1_results_20_reps.rda")
 
 
 list_to_analze <- c("value_ml_fr_indv_set", "RU_ml_fr_indv_set", "AU_ml_fr_indv_set",
@@ -239,7 +239,7 @@ rm(list = ls())
 gc()
 
 
-load("results/Simulation_Design_2_results.rda")
+load("results/Simulation_Design_2_results_20_reps.rda")
 
 list_to_analze <- c("value_ml_fr_indv_set", "RU_ml_fr_indv_set", "AU_ml_fr_indv_set",
                     "value_ml_fr_indv_cluster_set", "RU_ml_fr_indv_cluster_set", "AU_ml_fr_indv_cluster_set",
