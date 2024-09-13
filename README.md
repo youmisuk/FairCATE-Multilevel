@@ -27,4 +27,10 @@ Please note that installing `Rmosek` package is a little bit different from the 
   
 ### 2.2 Running the R files  
 
-`functions.r`
+#### 2.2.1 `functions.r`  
+This file contains four functions for GLMM model fitting, estimating fair CATE on multilevel data, and simulated data generating:  
+
+##### GLMM_model() 
+- Description: fitting the outcome model and treatment model using GLMM method.
+- Usage:
+  - 
