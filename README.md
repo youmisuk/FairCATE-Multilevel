@@ -8,7 +8,7 @@ To be updated...
 ### 2.1 Preparation  
 Before running the R files, please be sure all required R packages are installed successfully.  
 
-```
+```r
 install.packages("Rmosek")
 install.packages("MASS")
 install.packages("matrixcalc")
@@ -35,7 +35,7 @@ This file contains four functions for GLMM model fitting, estimating fair CATE o
 
   
 **Usage**
-```
+```r
 GLMM_model <- function(data,
                        outcome,
                        treatment,
