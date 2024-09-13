@@ -14,8 +14,7 @@ library(bartCause)
 library(grf)
 library(parallel)
 
-source("data_generating_process_multilevel.r")
-source("fairCATE_multilevel_functions.r")
+source("functions.r")
 
 
 run_iteration <- function(iter) {
@@ -241,47 +240,7 @@ run_iteration <- function(iter) {
                                       fixed_intercept = FALSE,
                                       delta = c(20, 20, 20),
                                       ps.trim="Sturmer.1")
-  
-  # PAN: 2024.08.12
-  out.cf <- causal_forest(X = dat0_is[, c("X11","X12","X13","S_is_1","L",
-                                          "X21","X22","X23","S_is_2","S_is_3")], 
-                          Y = dat0_is$Y, 
-                          W = dat0_is$A,
-                          W.hat = ml_fr_out_is$ps_scores) 
-  
-  # get individual treatment effect estimates, \tau_ij
-  cate.cf <- predict(out.cf, type="vector", estimate.variance = FALSE) 
-  
-  # 1.3.2 retrieve the estimated OTR, value, and ATE
-  OTR_cf <- as.numeric(cate.cf$predictions > 0)
-  value_cf <- mean(ifelse(OTR_cf > 0, Y1, Y0))
-  cate_cf_pre <- cate.cf$predictions
-  
-  # 1.3.3 get the Relative Utility
-  RU_cf_ps <- (value_cf - value_random ) / value_random
-  
-  unfairness_1 <- abs(mean(OTR_cf[S_is_1==1]) - mean(OTR_cf[S_is_1==0]))
-  
-  unfairness_2 <- abs(mean(OTR_cf[S_is_2==1]) - mean(OTR_cf[S_is_2==0]))
-  
-  unfairness_3 <- abs(mean(OTR_cf[S_is_3==1]) - mean(OTR_cf[S_is_3==0]))
-  
-  # get the average unfairness
-  average_unfairness_cf_ps <- (unfairness_1 + unfairness_2 + unfairness_3) / 3
-  
-  # PAN: 2024.07.29
-  # get the CATE_MSE
-  MSE_CATE_cf_ps <- MSE_CATE(cate_cf_pre, tau)
-  # get the CATE unfairness
-  unfairness_1 <- abs(mean(cate_cf_pre[S_is_1==1]) - mean(cate_cf_pre[S_is_1==0]))
-  unfairness_2 <- abs(mean(cate_cf_pre[S_is_2==1]) - mean(cate_cf_pre[S_is_2==0]))
-  unfairness_3 <- abs(mean(cate_cf_pre[S_is_3==1]) - mean(cate_cf_pre[S_is_3==0]))
-  
-  average_unfairness_cf_CATE_ps <- (unfairness_1 + unfairness_2 + unfairness_3) / 3
-  
-  # Remove the variables
-  rm(out.cf, cate.cf)
-  
+
   
   # --------------------- #
   #   1.4 Run ML_FRCATE   #
@@ -383,20 +342,6 @@ run_iteration <- function(iter) {
                                      delta = c(delta),
                                      ps.trim="Sturmer.1")
     
-    # ml_fr_out <- ML_FRCATE_alter_v10(data = dat0_is,
-    #                                  data_alter = dat0,
-    #                                  sensitive = c("S1"),
-    #                                  legitimate = NULL,
-    #                                  fairness = c("tau~S1"),
-    #                                  treatment = "A",
-    #                                  outcome = "Y",
-    #                                  cluster = "id",
-    #                                  multicategorical = NULL,
-    #                                  outcome.LMM = glmm_out_is$outcome.LMM,
-    #                                  ps.GLMM = glmm_out_is$ps.GLMM,
-    #                                  delta = c(delta),
-    #                                  ps.trim="Sturmer.1")
-    
     tau_hat <- ml_fr_out$tau_hat
     # get the OTR, value
     OTR_ml_fr <- as.numeric(tau_hat > 0)
@@ -462,20 +407,6 @@ run_iteration <- function(iter) {
                                      delta = c(delta, delta),
                                      ps.trim="Sturmer.1")
     
-    # ml_fr_out <- ML_FRCATE_alter_v10(data = dat0_is,
-    #                                  data_alter = dat0,
-    #                                  sensitive = c("S1","S2"),
-    #                                  legitimate = NULL,
-    #                                  fairness = c("tau~S1", "tau~S2"),
-    #                                  treatment = "A",
-    #                                  outcome = "Y",
-    #                                  cluster = "id",
-    #                                  multicategorical = NULL,
-    #                                  outcome.LMM = glmm_out_is$outcome.LMM,
-    #                                  ps.GLMM = glmm_out_is$ps.GLMM,
-    #                                  delta = c(delta, delta),
-    #                                  ps.trim="Sturmer.1")
-    # 
     tau_hat <- ml_fr_out$tau_hat
     # get the OTR, value
     OTR_ml_fr <- as.numeric(tau_hat > 0)
@@ -632,17 +563,13 @@ run_iteration <- function(iter) {
        RU_true = RU_true,
        RU_BART = RU_BART,
        RU_cf = RU_cf,
-       RU_cf_ps = RU_cf_ps,
        RU_BART_CATE = MSE_CATE_BART,
        RU_cf_CATE = MSE_CATE_cf,
-       RU_cf_CATE_ps = MSE_CATE_cf_ps,
        average_unfairness_true = average_unfairness_true,
        average_unfairness_bart = average_unfairness_bart,
        average_unfairness_cf = average_unfairness_cf,
-       average_unfairness_cf_ps = average_unfairness_cf_ps,
        average_unfairness_bart_CATE = average_unfairness_bart_CATE,
        average_unfairness_cf_CATE = average_unfairness_cf_CATE,
-       average_unfairness_cf_CATE_ps = average_unfairness_cf_CATE_ps,
        value_ml_fr_indv_set = value_ml_fr_indv_set,
        RU_ml_fr_indv_set = RU_ml_fr_indv_set,
        AU_ml_fr_indv_set = AU_ml_fr_indv_set,
@@ -680,8 +607,7 @@ clusterEvalQ(cl, {
   library(bartCause)
   library(grf)
   library(dplyr)
-  source("data_generating_process_multilevel.r")
-  source("fairCATE_multilevel_functions.r")
+  source("functions.r")
 })
 
 clusterExport(cl, c("run_iteration", "create_multileveldata_D2", "GLMM_model", 
@@ -689,7 +615,7 @@ clusterExport(cl, c("run_iteration", "create_multileveldata_D2", "GLMM_model",
 results <- parLapply(cl, 1:20, run_iteration)
 stopCluster(cl)
 # save the results
-save(results, file = "results/Simulation_Design_2_results.rda")
+save(results, file = "results/Simulation_Design_2_results_20_reps.rda")
 
 time_1 <- Sys.time()
 

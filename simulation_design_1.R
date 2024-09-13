@@ -15,8 +15,7 @@ library(bartCause)
 library(grf)
 library(parallel)
 
-source("data_generating_process_multilevel.r")
-source("fairCATE_multilevel_functions.r")
+source("functions.r")
 
 run_iteration <- function(iter) {
   
@@ -440,17 +439,13 @@ run_iteration <- function(iter) {
        RU_true = RU_true,
        RU_BART = RU_BART,
        RU_cf = RU_cf,
-       RU_cf_ps = RU_cf_ps,
        RU_BART_CATE = MSE_CATE_BART,
        RU_cf_CATE = MSE_CATE_cf,
-       RU_cf_CATE_ps = MSE_CATE_cf_ps,
        average_unfairness_true = average_unfairness_true,
        average_unfairness_bart = average_unfairness_bart,
        average_unfairness_cf = average_unfairness_cf,
-       average_unfairness_cf_ps = average_unfairness_cf_ps,
        average_unfairness_bart_CATE = average_unfairness_bart_CATE,
        average_unfairness_cf_CATE = average_unfairness_cf_CATE,
-       average_unfairness_cf_CATE_ps = average_unfairness_cf_CATE_ps,
        value_ml_fr_indv_set = value_ml_fr_indv_set,
        RU_ml_fr_indv_set = RU_ml_fr_indv_set,
        AU_ml_fr_indv_set = AU_ml_fr_indv_set,
@@ -480,8 +475,7 @@ clusterEvalQ(cl, {
   library(bartCause)
   library(grf)
   library(dplyr)
-  source("data_generating_process_multilevel.r")
-  source("fairCATE_multilevel_functions.r")
+  source("functions.r")
 })
 
 clusterExport(cl, c("run_iteration", "create_multileveldata_D1", "GLMM_model", "fairCATE_multilevel"))
@@ -492,7 +486,7 @@ time_1 <- Sys.time()
 
 time_1-time_0
 # save the results
-save(results, file = "Simulation_Design_1_results.rda")
+save(results, file = "results/Simulation_Design_1_results_50_reps.rda")
 
 
 
