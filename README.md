@@ -31,6 +31,7 @@ Please note that installing `Rmosek` package is a little bit different from the 
 This file contains four functions for GLMM model fitting, estimating fair CATE on multilevel data, and simulated data generating:  
 
 **`GLMM_model()`**   
+
 **Description:** fitting the outcome model and treatment model using GLMM method.  
 
   
@@ -75,4 +76,30 @@ glmm_out <- GLMM_model(data = dat0, outcome = "Y",
 summary(glmm_out$outcome.LMM)
 summary(glmm_out$ps.GLMM)
 ```
+
+**`fairCATE_multilevel()`**  
+
+**Description:** to estimate the CATE with fairness contraint.  
+
+  
+**Usage**
+```r
+fairCATE_multilevel <- function(data,
+                                sensitive,
+                                legitimate=NULL,
+                                fairness,
+                                treatment,
+                                outcome,
+                                cluster,
+                                multicategorical=NULL,
+                                outcome.LMM,
+                                ps.GLMM,
+                                fixed_intercept = TRUE,
+                                delta,
+                                ps.trim="Sturmer.1")
+```
+
+  
+**Argument**
+
 
