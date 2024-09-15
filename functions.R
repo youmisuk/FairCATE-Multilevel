@@ -825,9 +825,9 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
   # legitimate variable, the variable you wanna control for conditional statistical disparity
   L_continuous <- rnorm(totalN, -S1 + 0.25, 1)
   # discretize the L_continuous
-  L <- ifelse(L_continuous > 0.1, 1, 0)
+  X14 <- ifelse(L_continuous > 0.1, 1, 0)
   
-  pop <- data.frame(id, X11, X12, X13, S1, L, X21=X21[id], X22=X22[id], X23=X23[id], S2=S2[id])
+  pop <- data.frame(id, X11, X12, X13, S1, X14, X21=X21[id], X22=X22[id], X23=X23[id], S2=S2[id])
   
   # ::::: 4) generate selection probabilities and potential outcome ::::::::
   
@@ -838,14 +838,14 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
     # PAN:2024.07.03
     # I include all the covariates as moderators except the S2
     # This should be same to the Professor's version.
-    pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$L) + 
+    pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$X14) + 
       0.3*(pop$X21 + pop$X22 + pop$X23 - pop$S2)
     
     pop$Y0  <- 4 + 0.4*(pop$X11  + pop$X12 + pop$X13 + pop$S1 + pop$X21 - 
-                          pop$X22 + pop$X23 - pop$S2 + pop$L) + E
+                          pop$X22 + pop$X23 - pop$S2 + pop$X14) + E
     
     pop$Y1  <- pop$Y0 + 0.8 + 0.3 * pop$X11 + 0.2 * pop$X12 + 0.2 * pop$X13 - 
-      0.5*pop$S1 + 0.5*pop$X21 + 0.4*pop$X22 + 0.2*pop$X23 +  0.1*pop$L - 0.2*pop$S2
+      0.5*pop$S1 + 0.5*pop$X21 + 0.4*pop$X22 + 0.2*pop$X23 +  0.1*pop$X14 - 0.2*pop$S2
     
   } else {
     # R_j <- rnorm(totalN, 0, 0.25) # level-2 cluster effect in selection
@@ -857,14 +857,14 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
     pop$R_j <- R_j[id]
     pop$U_j <- U_j[id]
     
-    pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$L) + 
+    pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$X14) + 
       0.3*(pop$X21 + pop$X22 + pop$X23 - pop$S2)  + pop$R_j
     
     pop$Y0  <- 4 + 0.4*(pop$X11  + pop$X12 + pop$X13 + pop$S1 + pop$X21 - 
-                          pop$X22 + pop$X23 - pop$S2 + pop$L) + E + pop$U_j
+                          pop$X22 + pop$X23 - pop$S2 + pop$X14) + E + pop$U_j
     
     pop$Y1  <- pop$Y0 + 0.8 + 0.3 * pop$X11 + 0.2 * pop$X12 + 0.2 * pop$X13 - 
-      0.5*pop$S1 + 0.5*pop$X21 + 0.4*pop$X22 + 0.2*pop$X23 +  0.1*pop$L - 0.2*pop$S2
+      0.5*pop$S1 + 0.5*pop$X21 + 0.4*pop$X22 + 0.2*pop$X23 +  0.1*pop$X14 - 0.2*pop$S2
   }
   
   
@@ -949,9 +949,9 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
   # legitimate variable, the variable you wanna control for conditional statistical disparity
   L_continuous <- rnorm(totalN, -S_is_1 + 0.25, 1)
   # discretize the L_continuous
-  L <- ifelse(L_continuous > 0.1, 1, 0)
+  X14 <- ifelse(L_continuous > 0.1, 1, 0)
   
-  pop <- data.frame(id, X11, X12, X13, S1, L, 
+  pop <- data.frame(id, X11, X12, X13, S1, X14, 
                     X21=X21[id], X22=X22[id], X23=X23[id], S2=S2,
                     S_is_0, S_is_1, S_is_2, S_is_3)
   
@@ -967,12 +967,12 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
     # This should be same to the Professor's version.
     # PAN:2024.07.26
     # based on design 1, I only add more difference from the intersectional conditions
-    pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$L) + 
+    pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$X14) + 
       0.3*(pop$X21 + pop$X22 + pop$X23 - pop$S2)
     
     # Y0 construction
     pop$Y0 <- 4 +
-      0.4 * (pop$X11 + pop$X12 + pop$X13 + pop$X21 - pop$X22 + pop$X23 + pop$L) +
+      0.4 * (pop$X11 + pop$X12 + pop$X13 + pop$X21 - pop$X22 + pop$X23 + pop$X14) +
       -1 * pop$S_is_1 +
       0.5 * pop$S_is_2 +
       - 0.5 * pop$S_is_3 + E
@@ -988,7 +988,7 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
       0.5 * pop$X21 +
       0.4 * pop$X22 +
       0.2 * pop$X23 +
-      0.1 * pop$L 
+      0.1 * pop$X14 
     
   } else {
     # 2024.07.02 
@@ -1000,12 +1000,12 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
     
     # PAN:2024.07.26
     # based on design 1, I only add more difference from the intersectional conditions
-    pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$L) + 
+    pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$X14) + 
       0.3*(pop$X21 + pop$X22 + pop$X23 - pop$S2)  + pop$R_j
     
     # Y0 construction
     pop$Y0 <- 4 +
-      0.4 * (pop$X11 + pop$X12 + pop$X13 + pop$X21 - pop$X22 + pop$X23 + pop$L) +
+      0.4 * (pop$X11 + pop$X12 + pop$X13 + pop$X21 - pop$X22 + pop$X23 + pop$X14) +
       -1 * pop$S_is_1 +
       0.5 * pop$S_is_2 +
       - 0.5 * pop$S_is_3 + pop$U_j + E
@@ -1021,7 +1021,7 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
       0.5 * pop$X21 +
       0.4 * pop$X22 +
       0.2 * pop$X23 +
-      0.1 * pop$L 
+      0.1 * pop$X14 
   }
   
   
