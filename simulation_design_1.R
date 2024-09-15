@@ -46,7 +46,7 @@ run_iteration <- function(iter) {
   
   ATE_true <- mean(df$tau)
   value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
-  dat0 <- df[,c("id","X11","X12","X13","S1","L","X21","X22","X23","S2","A","Y")]
+  dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","A","Y")]
   
   # 1.1.2, generate a random treatment A in the proportion of 0.42, similar to df$A
   dat0$id <- as.character(dat0$id)
@@ -81,7 +81,7 @@ run_iteration <- function(iter) {
   
   # 1.2.1 fit BART causal model for CATE
   out.BART <- bartc(response = dat0$Y, treatment = dat0$A, 
-                    confounders = dat0[, c("X11","X12","X13","S1","L","X21","X22","X23","S2")], 
+                    confounders = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2")], 
                     method.rsp = "bart", method.trt = "bart", 
                     p.scoreAsCovariate = TRUE, 
                     use.rbrt = FALSE, 
@@ -127,7 +127,7 @@ run_iteration <- function(iter) {
   
   # 1.3.1 implement Causal Forests with 
   # X = confounders; Y = outcome; W = treatment
-  out.cf <- causal_forest(X = dat0[, c("X11","X12","X13","S1","L","X21","X22","X23","S2")], 
+  out.cf <- causal_forest(X = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2")], 
                           Y = dat0$Y, 
                           W = dat0$A) 
   
@@ -208,7 +208,7 @@ run_iteration <- function(iter) {
                                    ps.trim="Sturmer.1")
   
   # 1.3.b.1 re-run the causal forest model with propensity scores
-  out.cf <- causal_forest(X = dat0[, c("X11","X12","X13","S1","L","X21","X22","X23","S2")], 
+  out.cf <- causal_forest(X = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2")], 
                           Y = dat0$Y, 
                           W = dat0$A,
                           W.hat = ml_fr_out$ps_scores)
@@ -486,7 +486,7 @@ time_1 <- Sys.time()
 
 time_1-time_0
 # save the results
-save(results, file = "results/Simulation_Design_1_results_50_reps.rda")
+save(results, file = "results/Simulation_Design_1_results_20_reps.rda")
 
 
 

@@ -47,7 +47,7 @@ run_iteration <- function(iter) {
   
   ATE_true <- mean(df$tau)
   value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
-  dat0 <- df[,c("id","X11","X12","X13","S1","L","X21","X22","X23","S2","A","Y","S_is_1","S_is_2","S_is_3")]
+  dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","A","Y","S_is_1","S_is_2","S_is_3")]
   
   # 1.1.2, generate a random treatment A in the proportion of 0.42, similar to df$A
   dat0$id <- as.character(dat0$id)
@@ -100,7 +100,7 @@ run_iteration <- function(iter) {
   #                   keepTrees = FALSE)
   
   out.BART <- bartc(response = dat0_is$Y, treatment = dat0_is$A, 
-                    confounders = dat0_is[, c("X11","X12","X13","S_is_1","L","X21","X22","X23","S_is_2","S_is_3")], 
+                    confounders = dat0_is[, c("X11","X12","X13","S_is_1","X14","X21","X22","X23","S_is_2","S_is_3")], 
                     method.rsp = "bart", method.trt = "bart", 
                     p.scoreAsCovariate = TRUE, 
                     use.rbrt = FALSE, 
@@ -153,7 +153,7 @@ run_iteration <- function(iter) {
   #                         Y = dat0$Y, 
   #                         W = dat0$A) 
   
-  out.cf <- causal_forest(X = dat0_is[, c("X11","X12","X13","S_is_1","L","X21","X22","X23","S_is_2","S_is_3")], 
+  out.cf <- causal_forest(X = dat0_is[, c("X11","X12","X13","S_is_1","X14","X21","X22","X23","S_is_2","S_is_3")], 
                           Y = dat0_is$Y, 
                           W = dat0_is$A) 
   

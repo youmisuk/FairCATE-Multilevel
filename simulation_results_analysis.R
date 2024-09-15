@@ -1,8 +1,10 @@
 # load the results
 
-design_1 <- FALSE
+# design_1 <- FALSE
+# load("results/Simulation_Design_2_results_20_reps.rda")
 
-load("results/Simulation_Design_2_results.rda")
+design_1 <- TRUE
+load("results/Simulation_Design_1_results_20_reps.rda")
 
 length(results)
 
@@ -13,10 +15,10 @@ results[[2]]
 # PAN: 2024.08.03
 # add the CATE unfairness and MSE cate
 elements_to_average <- c("value_true", "value_random", "value_BART", "value_cf", 
-                         "RU_true", "RU_BART", "RU_cf","RU_cf_ps", "average_unfairness_true",
-                         "average_unfairness_bart","average_unfairness_cf","average_unfairness_cf_ps",
-                         "RU_BART_CATE", "RU_cf_CATE", "RU_cf_CATE_ps",
-                         "average_unfairness_bart_CATE","average_unfairness_cf_CATE","average_unfairness_cf_CATE_ps")
+                         "RU_true", "RU_BART", "RU_cf", "average_unfairness_true",
+                         "average_unfairness_bart","average_unfairness_cf",
+                         "RU_BART_CATE", "RU_cf_CATE",
+                         "average_unfairness_bart_CATE","average_unfairness_cf_CATE")
 
 # Initialize a list to store the average values
 average_values <- list()
