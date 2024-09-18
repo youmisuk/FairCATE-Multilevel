@@ -100,6 +100,18 @@ fairCATE_multilevel <- function(data,
 ```
 
   
-**Argument**
+**Argument**  
+- `data`: a dataframe. You do not need to convert the multicategorical covariates into dummy (one-hot) codings before model fiiting. We recommend users to normalize all the continuous covariates in advance for a faster convergence in GLMM model fitting.  
+- `sensitive`: a string array to indicate the sensitive variable(s).
+- `legitimate`: a string array to indicate the legitimate variable(s) for conditional stastistical disparity. Using NULL by default for statistical disparity.
+- `fairness`: a formula style string array to indicate the fairness constraints. It should start with `tau ~`, where we use `tau` to represent the CATE. For example, supporse your sensitive variable is `S1` and legitimate variable is `L1`, you fairness constraint (conditional statistical disparity) should be written as `tau ~ S1|L1`, which means "get the CATE with fariness constraint on S1 after controlling for L1".
+- `treatment`: a string to indicate the name of treatment variable. Treatment must be a binary variable for the current version.
+- `outcome`: a string to indicate the name of outcome vairable.
+- `cluster`: a string to indicate the name of the cluster id.
+- `multicategroical`: a string array to specify all the multicategorical variables. Using `NULL` by default to indicate that there is no multicategorical variable in your dataframe. If specified, this function will automatically convert these multicategorical variables into one-hot codings. The multicategorical variable(s) must be in factor format.
+- `outcome.LMM`: a fitted outcome model returned from the function `GLMM_model`.
+- `ps.GLMM`: a fitted treatment model returned from the function `GLMM_model`.
+- `fixed_intercept`: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.
+- `delta`: a numeric array or a list to indicate the (un)fairness tolerance level $\delta$. Usually, you can use 20 to indicate no fairness constraint ($\delta = \infty$) and 0.0001 for most strict fariness constraint
 
 
