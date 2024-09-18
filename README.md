@@ -123,6 +123,19 @@ fairCATE_multilevel <- function(data,
 
 **Example**  
 ```r
+# customize the optimizer and the maximal estimation iterations
+glmer_Control <- glmerControl(optimizer = "bobyqa",
+                              optCtrl = list(maxfun=100000))
+  
+# model fitting
+glmm_out <- GLMM_model(data = dat0, outcome = "Y",
+                         treatment = "A",
+                         cluster = "id",
+                         n_AGQ = 2,
+                         fixed_intercept = FALSE,
+                         glmer_Control = glmer_Control)
+
+# estimate CATEs with fairness constraints
 ml_fr_out <- fairCATE_multilevel(data = dat0,
                                  sensitive = c("S1","S2"),
                                  legitimate = c("L1"),
@@ -138,4 +151,6 @@ ml_fr_out <- fairCATE_multilevel(data = dat0,
                                  ps.trim="Sturmer.1")
 ```
 
+
+**`create_multileveldata_D1`**  
 
