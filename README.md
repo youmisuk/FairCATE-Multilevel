@@ -32,7 +32,8 @@ This file contains four functions for GLMM model fitting, estimating fair CATE o
 
 **`GLMM_model()`**   
 
-**Description:** fitting the outcome model and treatment model using GLMM method.  
+**Description** fitting the outcome model and treatment model using GLMM method. It will return two fitted objects:  
+-
 
   
 **Usage**
@@ -79,7 +80,11 @@ summary(glmm_out$ps.GLMM)
 
 **`fairCATE_multilevel()`**  
 
-**Description:** to estimate the CATE with fairness contraint.  
+**Description:** to estimate the CATE with fairness contraint. It will return:  
+- `tau.hat`: the estimated CATEs.
+- `unfair`: the unfairness on each condition you specified in the argument `fairness`.
+- `cf_outcomes`: the estimated counterfactual outcomes from the fitted outcome model.
+- `ps_scores`: the estimated propensity scores fromo the fitted treatment model.
 
   
 **Usage**
@@ -114,5 +119,22 @@ fairCATE_multilevel <- function(data,
 - `fixed_intercept`: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.
 - `delta`: a numeric array or a list to indicate the (un)fairness tolerance level $\delta$. Usually, you can use 20 to indicate no fairness constraint (i.e., $\delta = \infty$) and 0.0001 for most strict fariness constraint (i.e., $\delta = 0$). For example, if you set `fairness` argument to be `c("tau~S1", "tau~S2")` and you want to give fairness constraints on both two conditions, your `delta` should be `delta = c(0.0001, 0.0001)`.
 - `ps.trim`: a string to choose the trimming method for propensity scores. It should be either "Sturmer.1" (the default) or "Sturmer.2". "Sturmer.1" is the common range method ver.1 by Stürmer et al. Am J Epidemiol 2021;190:1659–1670. "Sturmer.2" is the common range method ver.2 by Stürmer et al. Am J Epidemiol 2010;172:843–854.
+
+**Example**  
+```r
+ml_fr_out <- fairCATE_multilevel(data = dat0,
+                                 sensitive = c("S1","S2"),
+                                 legitimate = c("L1"),
+                                 fairness = c("tau~S1|L1","tau~S2"),
+                                 treatment = "A",
+                                 outcome = "Y",
+                                 cluster = "id",
+                                 multicategorical = NULL,
+                                 outcome.LMM = glmm_out$outcome.LMM,
+                                 ps.GLMM = glmm_out$ps.GLMM,
+                                 fixed_intercept = FALSE,
+                                 delta = c(20,20),
+                                 ps.trim="Sturmer.1")
+```
 
 
