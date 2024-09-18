@@ -149,6 +149,17 @@ ml_fr_out <- fairCATE_multilevel(data = dat0,
                                  fixed_intercept = FALSE,
                                  delta = c(20,20),
                                  ps.trim="Sturmer.1")
+
+# retrieve the estimated CATEs
+cates_est <- ml_fr_out$tau_hat
+
+# retrieve the details of unfairness
+unfair_detail <- ml_fr_out$unfair
+
+# retrieve the estimated counterfactual outcomes and propensity scores
+cf_out <- ml_fr_out$cf_outcomes
+ps_out <- ml_fr_out$ps_scores
+
 ```
 
 
