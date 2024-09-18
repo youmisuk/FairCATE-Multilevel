@@ -32,8 +32,8 @@ This file contains four functions for GLMM model fitting, estimating fair CATE o
 
 **`GLMM_model()`**   
 
-**Description** fitting the outcome model and treatment model using GLMM method. It will return two fitted objects:  
--
+**Description**  
+to fit the outcome model and treatment model using GLMM method.
 
   
 **Usage**
@@ -80,7 +80,8 @@ summary(glmm_out$ps.GLMM)
 
 **`fairCATE_multilevel()`**  
 
-**Description:** to estimate the CATE with fairness contraint. It will return:  
+**Description:**  
+to estimate the CATE with fairness contraint. It will return:  
 - `tau.hat`: the estimated CATEs.
 - `unfair`: the unfairness on each condition you specified in the argument `fairness`.
 - `cf_outcomes`: the estimated counterfactual outcomes from the fitted outcome model.
