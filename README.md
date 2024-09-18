@@ -104,7 +104,7 @@ fairCATE_multilevel <- function(data,
 - `data`: a dataframe. You do not need to convert the multicategorical covariates into dummy (one-hot) codings before model fiiting. We recommend users to normalize all the continuous covariates in advance for a faster convergence in GLMM model fitting.  
 - `sensitive`: a string array to indicate the sensitive variable(s).
 - `legitimate`: a string array to indicate the legitimate variable(s) for conditional stastistical disparity. Using NULL by default for statistical disparity.
-- `fairness`: a formula style string array to indicate the fairness constraints. It should start with `tau ~`, where we use `tau` to represent the CATE. For example, supporse your sensitive variable is `S1` and legitimate variable is `L1`, you fairness constraint (conditional statistical disparity) should be written as `tau ~ S1|L1`, which means "get the CATE with fariness constraint on S1 after controlling for L1".
+- `fairness`: a formula style string array to indicate the fairness constraints. It should start with `tau ~`, where we use `tau` to represent the CATE. For example, supporse your sensitive variable is `S1` and legitimate variable is `L1`, you fairness constraint (conditional statistical disparity) should be written as `tau ~ S1|L1`, which means "get the CATE with fariness constraint on S1 after controlling for L1". The spaces between any letters or symbols in this `fairness` specification does not matter.
 - `treatment`: a string to indicate the name of treatment variable. Treatment must be a binary variable for the current version.
 - `outcome`: a string to indicate the name of outcome vairable.
 - `cluster`: a string to indicate the name of the cluster id.
@@ -112,6 +112,7 @@ fairCATE_multilevel <- function(data,
 - `outcome.LMM`: a fitted outcome model returned from the function `GLMM_model`.
 - `ps.GLMM`: a fitted treatment model returned from the function `GLMM_model`.
 - `fixed_intercept`: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.
-- `delta`: a numeric array or a list to indicate the (un)fairness tolerance level $\delta$. Usually, you can use 20 to indicate no fairness constraint ($\delta = \infty$) and 0.0001 for most strict fariness constraint
+- `delta`: a numeric array or a list to indicate the (un)fairness tolerance level $\delta$. Usually, you can use 20 to indicate no fairness constraint (i.e., $\delta = \infty$) and 0.0001 for most strict fariness constraint (i.e., $\delta = 0$). For example, if you set `fairness` argument to be `c("tau~S1", "tau~S2")` and you want to give fairness constraints on both two conditions, your `delta` should be `delta = c(0.0001, 0.0001)`.
+- `ps.trim`: a string to choose the trimming method for propensity scores. It should be either "Sturmer.1" (the default) or "Sturmer.2". "Sturmer.1" is the common range method ver.1 by Stürmer et al. Am J Epidemiol 2021;190:1659–1670. "Sturmer.2" is the common range method ver.2 by Stürmer et al. Am J Epidemiol 2010;172:843–854.
 
 
