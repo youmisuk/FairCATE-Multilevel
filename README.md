@@ -167,6 +167,16 @@ ps_out <- ml_fr_out$ps_scores
 
 **Description**  
   
-To generate the multilevel (individual-level and cluster-level) data. If setting the argument `clustereffect=TRUE`, it will return a dataframe with four indivdiaul-level covariates (`X11`, `X12`, `X13`, and `X14`) with one individual-level sensitive variable (`S1`), three cluster-level covariates (`X21`, `X22`, and `X23`) with one cluster-level sensitive variable (`S2`), cluster ID named `id`, true CATEs named `tau`, true optimal treatment regime named `policy`, propensity scores named `ps`, observed treatment assignments named `A`, and the observed outcome `Y`.
+To generate the multilevel (individual-level and cluster-level) data. If setting the argument `clustereffect=TRUE`, it will return a dataframe with:  
+- indivdiaul-level covariates: `X11`, `X12`, `X13`, and `X14`.
+- individual-level sensitive variable: `S1`.
+- cluster-level covariates: `X21`, `X22`, and `X23`.
+- cluster-level sensitive variable: `S2`.
+- cluster ID:`id`.
+- true CATEs: `tau`.
+- true optimal treatment regime: `policy`.
+- propensity scores: `ps`.
+- observed treatment assignments: `A`.
+- the observed outcome: `Y`.
 
 
