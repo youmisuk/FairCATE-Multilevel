@@ -182,12 +182,12 @@ To generate the multilevel (individual-level and cluster-level) data. If setting
 
 **Usage**  
 ```r
-df <- create_multileveldata_D1(cluster_num, 
-                                cluster_size, 
-                                E_var,
-                                R_var,
-                                U_var,
-                                clustereffect)
+create_multileveldata_D1 <- function(cluster_num, 
+                                      cluster_size, 
+                                      E_var,
+                                      R_var,
+                                      U_var,
+                                      clustereffect)
 ```
 
 **Argument**  
