@@ -209,7 +209,7 @@ df <- create_multileveldata_D1(cluster_num = 300,
                                 U_var = 0.0776, # var of cluster effect in outcome
                                 clustereffect=TRUE)
 
-# retrieve the true Heterogeneity effect
+# retrieve the true heterogeneous treatment effect
 tau <- df$tau
 
 # retrieve the true ATE
