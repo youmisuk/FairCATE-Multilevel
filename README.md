@@ -248,5 +248,46 @@ create_multileveldata_D2 <- function(cluster_num = 150,
                                      clustereffect=FALSE)
 ```
 
+**Argument**  
+- `cluster_num`: a integer to define the number of clusters.
+- `cluster_size`: a integer to define the cluster size.
+- `E_var`: a float to define the variance of residual in the outcome model.
+- `R_var`: a float to define the variance of cluster effect in treatment.
+- `U_var`: a float to define the variance of cluster effect in outcome.
+- `clustereffect`: logical. To determine whether to generate multilevel data.
+
+**Example**  
+```r
+# generate 7500 observations nested in 300 clusters, with the conditional ICC of .105
+# for the outcome model, and .372 for the treatment model.
+df <- create_multileveldata_D2(cluster_num = 300, 
+                                    cluster_size = 25, 
+                                    E_var = 0.6653, # var of residual
+                                    R_var = 1.95, # var of cluster effect in selection
+                                    U_var = 0.0776, # var of cluster effect in outcome
+                                    clustereffect=TRUE)
+
+# retrieve the true heterogeneous treatment effect
+tau <- df$tau
+
+# retrieve the true ATE
+ATE_true <- mean(df$tau)
+
+# retrieve the true optimal regimes
+OTRs_true <- df$policy
+
+# retrieve the true Value under OTRs
+value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
+
+# subset the generated dataframe for model building
+dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","A","Y","S_is_1","S_is_2","S_is_3")]
+
+# mutate the dat0 with intersectional sensitive variables
+library(dplyr)
+dat0_is <- dat0 %>% select(-S1, -S2)
+```
+
+
+
 
 
