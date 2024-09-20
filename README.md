@@ -230,7 +230,7 @@ Based on the function `create_multileveldata_D1`, to generate multilevel data wi
 - individual-level sensitive variable: `S1`.
 - cluster-level covariates: `X21`, `X22`, and `X23`.
 - cluster-level sensitive variable: `S2`.
-- intersectional sensitive variable: `S_is_0`, `S_is_1`, `S_is_2`, and `S_is_3` for the intersectional groups $(S1=0, S2=0)$, $(S1=1, S2=0)$, $(S1=0, S2=1)$, and $(S1=1, S2=1)$.
+- intersectional sensitive variable: `S_is_0`, `S_is_1`, `S_is_2`, and `S_is_3` for the intersectional groups $(S1=0, S2=0)$, $(S1=1, S2=0)$, $(S1=0, S2=1)$, and $(S1=1, S2=1)$, respectively.
 - cluster ID:`id`.
 - true CATEs: `tau`.
 - true optimal treatment regime: `policy`.
