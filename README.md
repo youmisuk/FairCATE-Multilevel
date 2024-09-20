@@ -280,7 +280,8 @@ OTRs_true <- df$policy
 value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
 
 # subset the generated dataframe for model building
-dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","A","Y","S_is_1","S_is_2","S_is_3")]
+dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22",
+              "X23","S2","A","Y","S_is_1","S_is_2","S_is_3")]
 
 # mutate the dat0 with intersectional sensitive variables
 library(dplyr)
