@@ -182,12 +182,12 @@ To generate the multilevel (individual-level and cluster-level) data. If setting
 
 **Usage**  
 ```r
-create_multileveldata_D1 <- function(cluster_num, 
-                                      cluster_size, 
-                                      E_var,
-                                      R_var,
-                                      U_var,
-                                      clustereffect)
+create_multileveldata_D1 <- function(cluster_num = 150,
+                                     cluster_size = 25,
+                                     E_var = 18, 
+                                     R_var = 0.0001,
+                                     U_var = 0.0001, 
+                                     clustereffect=FALSE)
 ```
 
 **Argument**  
@@ -237,6 +237,16 @@ Based on the function `create_multileveldata_D1`, to generate multilevel data wi
 - propensity scores: `ps`.
 - observed treatment assignments: `A`.
 - the observed outcome: `Y`.
+
+**Usage**  
+```r
+create_multileveldata_D2 <- function(cluster_num = 150,
+                                     cluster_size = 25,
+                                     E_var = 18, 
+                                     R_var = 0.0001,
+                                     U_var = 0.0001, 
+                                     clustereffect=FALSE)
+```
 
 
 
