@@ -1,9 +1,16 @@
 # FairCATE-Multilevel  
   
-## 1.0 Overview  
-To be updated...  
+## 1 Overview  
+
+**Title**: Fair and Robust Estimation of Heterogeneous Treatment Effects for Optimal Policies in Multilevel Studies
+
+**Authors**: Youmi Suk, Chan Park, Chenguang Pan, Kwangho Kim
+
+Recently, there have been growing efforts in developing fair algorithms for treatment effect estimation and optimal treatment recommendations to mitigate discriminatory biases against disadvantaged groups. While most of this work has primarily focused on addressing discrimination due to individual-level attributes (e.g., race/ethnicity), it overlooks the broader impact of societal structures and cultural norms (e.g., structural racism) beyond the individual level. In this paper, we formalize the concept of multilevel fairness for estimating heterogeneous treatment effects to improve fairness in optimal policies. Specifically, we propose a general framework for the estimation of conditional average treatment effects under multilevel fairness constraints that incorporate individual-level sensitive variables, cluster-level sensitive variables, and their combinations. Using this framework, we analyze the trade-off between fairness and the maximum achievable utility by the optimal policy. We evaluate the effectiveness of our framework through a simulation study and a real data study on math course-taking plans using data from the High School Longitudinal Study of 2009.
+
+For more details of our proposed methods, see [our paper](). 
   
-## 2.0 R files  
+## 2 R files  
   
 ### 2.1 Preparation  
 Before running the R files, please be sure all required R packages are installed successfully.  

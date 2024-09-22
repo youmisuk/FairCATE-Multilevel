@@ -71,20 +71,13 @@ GLMM_model <- function(data,
     C <- data[, cluster]
     Y <- data$Y
     
-    # PAN:2024.07.10
-    # revise the fitting process by adding all interaction terms
     # convert b.mat to a data.frame
     b.mat.df <- as.data.frame(b.mat)
     
-    # PAN:2024.07.10
     # fit the LMM model with interaction terms
     message("Fitting the LMM model for the outcome with interaction terms....")
     
-    # PAN: 2024.07.11
-    # to avoid the interaction between the A and C, we need manually specify the lmm formula
-    # fixed_effects <- paste("A *",include_vars, collapse = " + ")
-    # PAN: 2024.07.12
-    # including the inetraction between the A and the dummied multicategorical variables
+    # include the interaction between the A and covariates
     # using [-1] to drop the intercept term
     fixed_effects <- paste("A *", names(b.mat.df)[-1], collapse = " + ")
     
@@ -128,20 +121,13 @@ GLMM_model <- function(data,
     C <- data[, cluster]
     Y <- data$Y
     
-    # PAN:2024.07.10
-    # revise the fitting process by adding all interaction terms
     # convert b.mat to a data.frame
     b.mat.df <- as.data.frame(b.mat)
     
-    # PAN:2024.07.10
     # fit the LMM model with interaction terms
     message("Fitting the LMM model for the outcome with interaction terms....")
-    
-    # PAN: 2024.07.11
-    # to avoid the interaction between the A and C, we need manually specify the lmm formula
-    # fixed_effects <- paste("A *",include_vars, collapse = " + ")
-    # PAN: 2024.07.12
-    # including the inetraction between the A and the dummied multicategorical variables
+
+    # Include the interaction between the A and covariates
     # using [-1] to drop the intercept term
     fixed_effects <- paste("A *", names(b.mat.df)[-1], collapse = " + ")
     
@@ -274,11 +260,11 @@ fairCATE_multilevel <- function(data,
     
     if (ps.var==0){warning("There is no random effect in the propensity score model!")}
     
-    # get the counterfactual outcome
-    # PAN: 2024.07.11
     # create the interaction term in b.matrix
     interaction_A1 <- b.mat[, -1] * 1
     interaction_A0 <- b.mat[, -1] * 0
+    
+    # get the counterfactual outcome    
     design_matrix_A1 <- cbind(b.mat, interaction_A1)
     design_matrix_A0 <- cbind(b.mat, interaction_A0)
     
@@ -292,7 +278,6 @@ fairCATE_multilevel <- function(data,
     
     # estimate of Pr(A=1|X,S) = \int Pr(A=1|X,S,random effect=u)*f(u) du
     ps.marginal <- function(x) {
-      # PAN: 2024.07.03 
       # adding a condition to skip the integration if the ps.var = 0
       if (ps.var == 0) {
         return(ps.given.re(x, 0))
@@ -359,9 +344,6 @@ fairCATE_multilevel <- function(data,
     # Optimization
     ####################################################################################
     
-    ####
-    # we want to achieve unfairness at S1 for conditional statistical parity and S1 for global statistical parity.
-    
     message("Optimizing using the given fariness condition...")
     
     Q.mat <- (t(b.mat) %*% b.mat)/nrow(b.mat)
@@ -372,13 +354,13 @@ fairCATE_multilevel <- function(data,
     
     
     delta.v <- c()
-    # PAN: based on the input fariness argument to build the delta vector
+    # based on the input fariness argument to build the delta vector
     if (is.list(delta)){
       delta.v <- unlist(delta)
     } else {
       for (i in 1:length(fairness)) {
         if (grepl("\\|",fairness[i])){
-          # 2024.05.29
+
           # to make it works on the multicategorical legitimate variables
           L_temp <- sub(".*\\|", "", fairness[i])
           n_level <- nlevels(as.factor(data[,L_temp]))
@@ -393,7 +375,6 @@ fairCATE_multilevel <- function(data,
     prob$c <- c(-phi.b.hat, 1)
     prob$bx <- rbind(blx=c(rep(-Inf,k),0), bux=c(rep(Inf,k+1)))
     
-    #### PAN revision ####
     # using whether has "|" to choose the conditional SP or Global SP
     for (fair in fairness) {
       
@@ -414,7 +395,7 @@ fairCATE_multilevel <- function(data,
           C.mat <- rbind(C.mat, temp.C) # C.mat's row counts are n.constraints
         }
       } else { 
-        # this is the global SP
+        # this is the global statistical parity
         s.nm <- sub(".*~", "", fair)
         # global statistical parity
         temp.C <- cbind((1-dat[,s.nm]) %*% b.mat/(N.tot*mean(1 - dat[,s.nm])) - dat[,s.nm] %*% b.mat/(N.tot*mean(dat[,s.nm])),0)
@@ -423,18 +404,17 @@ fairCATE_multilevel <- function(data,
     }
     
     prob$A <- Matrix(C.mat)
-    # PAN
+
     prob$bc <- rbind(blc=-delta.v,
                      buc=delta.v)
     # Cholesky factorization
     Q <- suppressWarnings(chol(Q.mat, TRUE))
     r <- attr(Q, 'rank')
     
-    # if (r < nrow(x)) Q[(r+1):nrow(x), (r+1):nrow(x)] <- 0
     Q[-(1:r), -(1:r)] <- 0
     oo <- order(attr(Q, 'pivot'))
     unpivQ.mat <- Q[, oo]
-    # all.equal(crossprod(unpivQ.mat), Q.mat)
+
     prob$F <- Matrix(rbind(c(rep(0,k), 1),
                            rep(0,k+1),
                            cbind(unpivQ.mat, as(matrix(0,k,1), "dgCMatrix"))
@@ -449,12 +429,11 @@ fairCATE_multilevel <- function(data,
     beta.hat <- r$sol$itr$xx[1:k]
     tau.hat <- b.mat %*% beta.hat
     
-    # unfairness #### PAN revision ####
+    # unfairness 
     message("Fairness restrained CATE calculation finished...")
     message("Extract the unfairness...")
     
-    # 2024.06.18
-    # adding a vector to load all the unfariness
+    # adding a vector to load all the unfairness
     unfairness <- c()
     
     for (fair in fairness) {
@@ -473,7 +452,7 @@ fairCATE_multilevel <- function(data,
           unfairness <- c(unfairness,ufair)
         }
       } else { 
-        # this is the global SP
+        # this is the global statistical parity
         s.nm <- sub(".*~", "", fair)
         # global statistical parity
         ufair <- abs(mean(tau.hat[which(dat[,s.nm]==1),]) - mean(tau.hat[which(dat[,s.nm]==0),]))
@@ -524,7 +503,7 @@ fairCATE_multilevel <- function(data,
     } else {
       # combine all legitimate matrix into one unified L matrix
       for (i in 1:length(legitimate)) {
-        # PAN: support adding the cluster ID as legitimate variable
+        # support adding the cluster ID as legitimate variable
         if (legitimate[i] == cluster){
           Cl.mat_ <- Cl.mat
           colnames(Cl.mat_) <- paste0(legitimate[i],"_", 1:(ncol(Cl.mat_)))
@@ -546,11 +525,11 @@ fairCATE_multilevel <- function(data,
     
     if (ps.var==0){warning("There is no random effect in the propensity score model!")}
     
-    # get the counterfactual outcome
-    # PAN: 2024.07.11
     # create the interaction term in b.matrix
     interaction_A1 <- b.mat[, -1] * 1
     interaction_A0 <- b.mat[, -1] * 0
+    
+    # get the counterfactual outcome
     design_matrix_A1 <- cbind(b.mat, interaction_A1)
     design_matrix_A0 <- cbind(b.mat, interaction_A0)
     
@@ -564,7 +543,6 @@ fairCATE_multilevel <- function(data,
     
     # estimate of Pr(A=1|X,S) = \int Pr(A=1|X,S,random effect=u)*f(u) du
     ps.marginal <- function(x) {
-      # PAN: 2024.07.03 
       # adding a condition to skip the integration if the ps.var = 0
       if (ps.var == 0) {
         return(ps.given.re(x, 0))
@@ -613,11 +591,11 @@ fairCATE_multilevel <- function(data,
                         (1-A)*(Y-outcome.A0.estimate) / (1-ps.estimate) + 
                         (outcome.A1.estimate-outcome.A0.estimate) ) * b.mat)[C==cluster_id & !(1:length(C) %in% idx.exclude),]
         if ( "numeric" %in% class(mat_sub)) {
-          # PAN: this condition handles the cluster with only one observation
+          # this condition handles the cluster with only one observation
           phi.b.hat[jj,] <- mat_sub}
         else if(all(is.na(mat_sub))==T){
-          # PAN: this condition handles the cluster whose all observations are with trimmed propensity
-          # PAN: will give a weight as 0
+          # this condition handles the cluster whose all observations are with trimmed propensity
+          # will give a weight as 0
           phi.b.hat[jj,] <- rep(0,ncol(b.mat))
         } else{
           colmean <- colMeans(mat_sub)
@@ -631,9 +609,6 @@ fairCATE_multilevel <- function(data,
     # Optimization
     ####################################################################################
     
-    ####
-    # we want to achieve unfairness at S1 for conditional statistical parity and S1 for global statistical parity.
-    
     message("Optimizing using the given fariness condition...")
     
     Q.mat <- (t(b.mat) %*% b.mat)/nrow(b.mat)
@@ -644,13 +619,12 @@ fairCATE_multilevel <- function(data,
     
     
     delta.v <- c()
-    # PAN: based on the input fariness argument to build the delta vector
+    # based on the input fariness argument to build the delta vector
     if (is.list(delta)){
       delta.v <- unlist(delta)
     } else {
       for (i in 1:length(fairness)) {
         if (grepl("\\|",fairness[i])){
-          # 2024.05.29
           # to make it works on the multicategorical legitimate variables
           L_temp <- sub(".*\\|", "", fairness[i])
           n_level <- nlevels(as.factor(data[,L_temp]))
@@ -665,7 +639,6 @@ fairCATE_multilevel <- function(data,
     prob$c <- c(-phi.b.hat, 1)
     prob$bx <- rbind(blx=c(rep(-Inf,k),0), bux=c(rep(Inf,k+1)))
     
-    #### PAN revision ####
     # using whether has "|" to choose the conditional SP or Global SP
     for (fair in fairness) {
       
@@ -686,7 +659,7 @@ fairCATE_multilevel <- function(data,
           C.mat <- rbind(C.mat, temp.C) # C.mat's row counts are n.constraints
         }
       } else { 
-        # this is the global SP
+        # this is the global statistical parity
         s.nm <- sub(".*~", "", fair)
         # global statistical parity
         temp.C <- cbind((1-dat[,s.nm]) %*% b.mat/(N.tot*mean(1 - dat[,s.nm])) - dat[,s.nm] %*% b.mat/(N.tot*mean(dat[,s.nm])),0)
@@ -695,18 +668,18 @@ fairCATE_multilevel <- function(data,
     }
     
     prob$A <- Matrix(C.mat)
-    # PAN
+
     prob$bc <- rbind(blc=-delta.v,
                      buc=delta.v)
     # Cholesky factorization
     Q <- suppressWarnings(chol(Q.mat, TRUE))
     r <- attr(Q, 'rank')
     
-    # if (r < nrow(x)) Q[(r+1):nrow(x), (r+1):nrow(x)] <- 0
+
     Q[-(1:r), -(1:r)] <- 0
     oo <- order(attr(Q, 'pivot'))
     unpivQ.mat <- Q[, oo]
-    # all.equal(crossprod(unpivQ.mat), Q.mat)
+
     prob$F <- Matrix(rbind(c(rep(0,k), 1),
                            rep(0,k+1),
                            cbind(unpivQ.mat, as(matrix(0,k,1), "dgCMatrix"))
@@ -721,12 +694,12 @@ fairCATE_multilevel <- function(data,
     beta.hat <- r$sol$itr$xx[1:k]
     tau.hat <- b.mat %*% beta.hat
     
-    # unfairness #### PAN revision ####
+    # unfairness 
     message("Fairness restrained CATE calculation finished...")
     message("Extract the unfairness...")
     
-    # 2024.06.18
-    # adding a vector to load all the unfariness
+
+    # adding a vector to load all the unfairness
     unfairness <- c()
     
     for (fair in fairness) {
@@ -789,17 +762,16 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
   id <- as.factor(rep(1:J, each=n.clus))              # cluster id
   
   # ::::: 2) generate level-2 covariates, W: X21,X22,X23 :::::
-  # PAN: cluster level sensitive variable, should be historically disadvantaged minority group
+  # cluster level sensitive variable, should be historically disadvantaged minority group
   S2 <- rbinom(J, size = 1, prob = 0.3)
   
   # cluster level covariate 1
   X21 <- rnorm(J, 0, 1)  
   
-  # cluster level covariate 2 influnced by S2
+  # cluster level covariate 2 influenced by S2
   X22 <- rnorm(J, -S2 + 0.5, 1)
   
-  # PAN: 2024.07.11
-  # cluster level covariate 3 influnced by S2, like the Government's funding for the 
+  # cluster level covariate 3 influenced by S2, like the Government's funding for the 
   # protected groups
   
   X23 <- rnorm(J, - 0.3 * S2, 1)
@@ -809,16 +781,15 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
   # ::::: 3) generate level-1 covariates, Xs with cluster-specific means :::::
   
   totalN <- length(id)
-  # PAN: the protected group might be the minority group
+  # the protected group might be the minority group
   S1 <- rbinom(totalN, size = 1, prob = 0.4)  
-  # PAN: 
+
   # individual level covariate 1
   X11 <- rnorm(totalN, 0, 1)
   
   # individual level covariate 2 influence by S1
   X12 <- rnorm(totalN, -2 * S1 + 1, 1)
   
-  # PAN: 2024.07.11
   # individual level covariate 3 influnced by S1
   X13 <- rnorm(totalN, -0.5 * S1, 1)
   
@@ -835,9 +806,7 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
   
   if (clustereffect == FALSE) {
     
-    # PAN:2024.07.03
-    # I include all the covariates as moderators except the S2
-    # This should be same to the Professor's version.
+    # Include all the covariates as moderators except the S2
     pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$X14) + 
       0.3*(pop$X21 + pop$X22 + pop$X23 - pop$S2)
     
@@ -848,9 +817,6 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
       0.5*pop$S1 + 0.5*pop$X21 + 0.4*pop$X22 + 0.2*pop$X23 +  0.1*pop$X14 - 0.2*pop$S2
     
   } else {
-    # R_j <- rnorm(totalN, 0, 0.25) # level-2 cluster effect in selection
-    # U_j <- rnorm(totalN, 0, 0.5) # level-2 cluster effect in outcome
-    # 2024.07.02 
     # adding the cluster-specific random effect and increase the variance
     R_j <- rnorm(J, 0, sqrt(R_var)) # level-2 cluster effect in selection
     U_j <- rnorm(J, 0, sqrt(U_var)) # level-2 cluster effect in outcome
@@ -901,23 +867,18 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
   id <- as.factor(rep(1:J, each=n.clus))              # cluster id
   totalN <- length(id)
   # ::::: 2) generate level-2 covariates, W: X21,X22,X23 :::::
-  # PAN: cluster level sensitive variable, should be historically disadvantaged minority group
+  # cluster level sensitive variable, should be historically disadvantaged minority group
   S2 <- rbinom(J, size = 1, prob = 0.3)
-  # PAN: the protected group might be the minority group
+  # the protected group might be the minority group
   S1 <- rbinom(totalN, size = 1, prob = 0.4)  
   
   # cluster level covariate 1
   X21 <- rnorm(J, 0, 1)  
   
-  # cluster level covariate 2 influnced by S2
-  # X22 <- rnorm(J, -S2 + 0.5, 1)
+  # cluster level covariate 2
   X22 <- rnorm(J, 0.5, 1)
   
-  # PAN: 2024.07.11
-  # cluster level covariate 3 influnced by S2, like the Government's funding for the 
-  # protected groups
-  
-  # X23 <- rnorm(J, 0.3 * S2, 1)
+  # cluster level covariate 3
   X23 <- rnorm(J, -1, 1)
   
   names(X21) <- names(X22) <- names(X23) <- names(S2) <- levels(id) 
@@ -938,12 +899,9 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
   X11 <- rnorm(totalN, -S_is_2, 1)
   
   # individual level covariate 2 influence by S1_is_3
-  #X12 <- rnorm(totalN, -2 * S_is_3 + 1, 1)
   X12 <- rnorm(totalN, -2 * S_is_3, 1)
   
-  # PAN: 2024.07.11
   # individual level covariate 3 influnced by S1
-  # X13 <- rnorm(totalN, -0.5 * S_is_1 + 1, 1)
   X13 <- rnorm(totalN, S_is_1, 1)
   
   # legitimate variable, the variable you wanna control for conditional statistical disparity
@@ -962,22 +920,19 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
   
   if (clustereffect == FALSE) {
     
-    # PAN:2024.07.03
-    # I include all the covariates as moderators except the S2
-    # This should be same to the Professor's version.
-    # PAN:2024.07.26
-    # based on design 1, I only add more difference from the intersectional conditions
+    # Include all the covariates as moderators except the S2
+    # Add more difference from the intersectional conditions
     pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$X14) + 
       0.3*(pop$X21 + pop$X22 + pop$X23 - pop$S2)
     
-    # Y0 construction
+    # model for Y0
     pop$Y0 <- 4 +
       0.4 * (pop$X11 + pop$X12 + pop$X13 + pop$X21 - pop$X22 + pop$X23 + pop$X14) +
       -1 * pop$S_is_1 +
       0.5 * pop$S_is_2 +
       - 0.5 * pop$S_is_3 + E
     
-    # Y1 construction
+    # model for Y1
     pop$Y1 <- pop$Y0 + 0.8 +
       0.3 * pop$X11 +
       0.2 * pop$X12 +
@@ -991,26 +946,24 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
       0.1 * pop$X14 
     
   } else {
-    # 2024.07.02 
-    # adding the cluster-specific random effect and increase the variance
+    # add the cluster-specific random effect and increase the variance
     R_j <- rnorm(J, 0, sqrt(R_var)) # level-2 cluster effect in selection
     U_j <- rnorm(J, 0, sqrt(U_var)) # level-2 cluster effect in outcome
     pop$R_j <- R_j[id]
     pop$U_j <- U_j[id]
     
-    # PAN:2024.07.26
-    # based on design 1, I only add more difference from the intersectional conditions
+    # add more difference from the intersectional conditions
     pop$lps <- -0.7 + 0.3*(pop$X11 + pop$X12 + pop$X13 + pop$S1 + pop$X14) + 
       0.3*(pop$X21 + pop$X22 + pop$X23 - pop$S2)  + pop$R_j
     
-    # Y0 construction
+    # model for Y0
     pop$Y0 <- 4 +
       0.4 * (pop$X11 + pop$X12 + pop$X13 + pop$X21 - pop$X22 + pop$X23 + pop$X14) +
       -1 * pop$S_is_1 +
       0.5 * pop$S_is_2 +
       - 0.5 * pop$S_is_3 + pop$U_j + E
     
-    # Y1 construction
+    # model for Y1
     pop$Y1 <- pop$Y0 + 0.8 +
       0.3 * pop$X11 +
       0.2 * pop$X12 +
