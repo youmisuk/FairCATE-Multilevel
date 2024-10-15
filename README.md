@@ -8,7 +8,7 @@
 
 Recently, there have been growing efforts in developing fair algorithms for treatment effect estimation and optimal treatment recommendations to mitigate discriminatory biases against disadvantaged groups. While most of this work has primarily focused on addressing discrimination due to individual-level attributes (e.g., race/ethnicity), it overlooks the broader impact of societal structures and cultural norms (e.g., structural racism) beyond the individual level. In this paper, we formalize the concept of multilevel fairness for estimating heterogeneous treatment effects to improve fairness in optimal policies. Specifically, we propose a general framework for the estimation of conditional average treatment effects under multilevel fairness constraints that incorporate individual-level sensitive variables, cluster-level sensitive variables, and their combinations. Using this framework, we analyze the trade-off between fairness and the maximum achievable utility by the optimal policy. We evaluate the effectiveness of our framework through a simulation study and a real data study on math course-taking plans using data from the High School Longitudinal Study of 2009.
 
-For more details of our proposed methods, see [our paper](). 
+For more details of our proposed methods, see [our paper](https://osf.io/preprints/psyarxiv/xz3jw). 
   
 ## 2 R files  
   
@@ -294,5 +294,12 @@ dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22",
 library(dplyr)
 dat0_is <- dat0 %>% select(-S1, -S2)
 ```
-#### 2.2.2 `simulation_design_1.R`  
+#### 2.2.2 `simulation_design_1.R` and `simulation_design_2.R`  
 
+These two R files use parallel computing technique to accelerate the simulation study process. Running either of them for 500 repetitions will be finished in about 2 hours on our platform, which is as follows:  
+- OS: Windows 11 Pro
+- CPU: i7 14700F with PL1 250W, PL2 250W
+- RAM: 96 GB
+- R version: 4.4.1 (2024-06-14 ucrt) -- "Race for Your Life"
+
+A large RAM (at least 64 GB) is recomended.
