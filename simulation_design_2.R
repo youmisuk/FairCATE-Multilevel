@@ -1,7 +1,4 @@
-# date: 2024.08.12
-# purpose:
-#     - this file is based on the Design_2_parallel_V2.r version
-#     - this file add the propensity score in to the causal forest model.
+# NOTE: this file uses parallel computation to run the simulation
 
 library(MASS)
 library(matrixcalc)
@@ -39,8 +36,8 @@ run_iteration <- function(iter) {
   
   df <- create_multileveldata_D2(cluster_num = 300, 
                                     cluster_size = 25, 
-                                    E_var = 0.6653, # var of residual
-                                    R_var = 1.95, # var of cluster effect in selection
+                                    R_var = 0.6653, # var of residual
+                                    V_var = 1.95, # var of cluster effect in selection
                                     U_var = 0.0776, # var of cluster effect in outcome
                                     clustereffect=TRUE)
   
@@ -51,8 +48,7 @@ run_iteration <- function(iter) {
   
   # 1.1.2, generate a random treatment A in the proportion of 0.42, similar to df$A
   dat0$id <- as.character(dat0$id)
-  
-  # PAN: 2024.07.20
+
   # mutate the dat0 with intersectional sensitive variables
   dat0_is <- dat0 %>% select(-S1, -S2)
   dat0 <- dat0 %>% select(-S_is_1, -S_is_2, -S_is_3)
@@ -127,7 +123,6 @@ run_iteration <- function(iter) {
   # get the average unfairness
   average_unfairness_bart <- (unfairness_1 + unfairness_2 + unfairness_3) / 3
   
-  # PAN: 2024.07.29
   # get the CATE_MSE
   MSE_CATE_BART <- MSE_CATE(cate.BART, tau)
   # get the CATE unfairness
@@ -177,7 +172,6 @@ run_iteration <- function(iter) {
   # get the average unfairness
   average_unfairness_cf <- (unfairness_1 + unfairness_2 + unfairness_3) / 3
   
-  # PAN: 2024.07.29
   # get the CATE_MSE
   MSE_CATE_cf <- MSE_CATE(cate_cf_pre, tau)
   # get the CATE unfairness
@@ -272,7 +266,6 @@ run_iteration <- function(iter) {
   OTR_ml_fr_init_is <- as.numeric(tau_hat_init_is > 0)
   value_ml_fr_init_is <- mean(ifelse(OTR_ml_fr_init_is > 0, Y1, Y0))
   
-  # PAN: 2024.07.21
   # Revised the unfairness calculation for intersectional fairness
   # condition1: E[d=1|S_is_1=1] - E[d=1|S_is_1=0]
   unfairness_1_init_is <- abs(mean(OTR_ml_fr_init_is[S_is_1==1]) - mean(OTR_ml_fr_init_is[S_is_1==0]))
@@ -313,7 +306,6 @@ run_iteration <- function(iter) {
   FURG_is_set <- c()
   FUTR_is_set <- c()
   
-  # PAN: 2024.07.29
   RU_ml_fr_indv_CATE_set <- c()
   AU_ml_fr_indv_CATE_set <- c()
   
@@ -370,8 +362,6 @@ run_iteration <- function(iter) {
     
     
     # calculate the UD
-    # PAN: 2024.07.25
-    # revised the UD
     UD_indv_1 <- (unfairness_1_init - unfairness_1) / unfairness_1_init
     UD_indv_2 <- (unfairness_2_init - unfairness_2) / unfairness_2_init
     UD_indv_3 <- (unfairness_3_init - unfairness_3) / unfairness_3_init
@@ -381,7 +371,6 @@ run_iteration <- function(iter) {
     
     FUTR_indv <- - UD_indv / UG_indv
     
-    # PAN: 2024.07.29
     # get the CATE_MSE
     MSE_CATE_ml_fr_indv <- MSE_CATE(tau_hat, tau)
     # get the CATE unfairness
@@ -446,7 +435,6 @@ run_iteration <- function(iter) {
     
     FUTR_indv_cluster <- - UD_indv_cluster / UG_indv_cluster
     
-    # PAN: 2024.07.29
     # get the CATE_MSE
     MSE_CATE_ml_fr_indv_cluster <- MSE_CATE(tau_hat, tau)
     # get the CATE unfairness
@@ -512,7 +500,6 @@ run_iteration <- function(iter) {
     
     FUTR_is <- - UD_is / UG_is
     
-    # PAN: 2024.07.29
     # get the CATE_MSE
     MSE_CATE_ml_fr_is <- MSE_CATE(tau_hat_is, tau)
     # get the CATE unfairness
@@ -544,7 +531,6 @@ run_iteration <- function(iter) {
     FURG_is_set <- c(FURG_is_set, FURG_is)
     FUTR_is_set <- c(FUTR_is_set, FUTR_is)
     
-    # PAN: 2024.07.29
     RU_ml_fr_indv_CATE_set <- c(RU_ml_fr_indv_CATE_set, MSE_CATE_ml_fr_indv)
     AU_ml_fr_indv_CATE_set <- c(AU_ml_fr_indv_CATE_set, average_unfairness_ml_fr_indv_CATE)
     

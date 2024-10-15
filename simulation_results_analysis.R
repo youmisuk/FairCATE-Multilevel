@@ -8,11 +8,7 @@ load("results/Simulation_Design_1_results_20_reps.rda")
 
 length(results)
 
-results[[2]]
-
 # Assuming your list is named 'results'
-# Define the names of the elements you want to average
-# PAN: 2024.08.03
 # add the CATE unfairness and MSE cate
 elements_to_average <- c("value_true", "value_random", "value_BART", "value_cf", 
                          "RU_true", "RU_BART", "RU_cf", "average_unfairness_true",
@@ -34,9 +30,9 @@ average_values <- unlist(average_values)
 # Print the average values
 print(round(average_values,3))
 
-# ----------------------------------
+# --------------------------------------
 # extract the rest lists in the results
-# ----------------------------------
+# --------------------------------------
 if (design_1) {
   list_to_analze <- c("value_ml_fr_indv_set", "RU_ml_fr_indv_set", "AU_ml_fr_indv_set",
                       "value_ml_fr_indv_cluster_set", "RU_ml_fr_indv_cluster_set", "AU_ml_fr_indv_cluster_set",
@@ -61,9 +57,9 @@ if (design_1) {
   print(round(average_values_delta20,3))
   
   
-  # ----------------------------------
+  # ---------------------------------------------
   # Convert the list-elements into one dataframe
-  # ----------------------------------
+  # ---------------------------------------------
   
   # Define the names of the elements you want to convert into a dataframe
   elements_to_convert <- list_to_analze
@@ -172,7 +168,6 @@ if (design_1) {
   FURG_is_set_mean <- apply(t(sapply(results, function(x) x$FURG_is_set)),2, mean)
   FUTR_is_set_mean <- apply(t(sapply(results, function(x) x$FUTR_is_set)),2, mean)
   
-  # PAN:2024.08.04
   RU_ml_fr_indv_CATE_set_mean <- apply(t(sapply(results, function(x) x$RU_ml_fr_indv_CATE_set)),2, mean)
   AU_ml_fr_indv_CATE_set_mean <- apply(t(sapply(results, function(x) x$AU_ml_fr_indv_CATE_set)),2, mean)
   

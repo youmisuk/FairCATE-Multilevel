@@ -1,9 +1,4 @@
-# date: 2024.08.13
-# purpose:
-#     - this file is to re-create the plot 1 and 2 with larger font size and better readability
-
 library(ggplot2)
-
 
 load("results/Simulation_Design_1_results_20_reps.rda")
 
@@ -31,9 +26,9 @@ print(round(average_values_delta0,3))
 print(average_values_delta20)
 
 
-# ----------------------------------
+# --------------------------------------------
 # Convert the list-elements into one dataframe
-# ----------------------------------
+# --------------------------------------------
 
 # Define the names of the elements you want to convert into a dataframe
 elements_to_convert <- list_to_analze
@@ -281,7 +276,6 @@ AU_ml_fr_is_set_mean <- apply(t(sapply(results, function(x) x$AU_ml_fr_is_set)),
 FURG_is_set_mean <- apply(t(sapply(results, function(x) x$FURG_is_set)),2, mean)
 FUTR_is_set_mean <- apply(t(sapply(results, function(x) x$FUTR_is_set)),2, mean)
 
-# PAN:2024.08.04
 RU_ml_fr_indv_CATE_set_mean <- apply(t(sapply(results, function(x) x$RU_ml_fr_indv_CATE_set)),2, mean)
 AU_ml_fr_indv_CATE_set_mean <- apply(t(sapply(results, function(x) x$AU_ml_fr_indv_CATE_set)),2, mean)
 

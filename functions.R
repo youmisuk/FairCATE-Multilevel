@@ -30,10 +30,13 @@ GLMM_model <- function(data,
                        n_AGQ = 1,
                        fixed_intercept = TRUE,
                        glmer_Control=NULL){
+  
   # change the variable name
   if(outcome != "Y"){names(data)[which(names(data) == outcome)] <- "Y"}
   if(treatment != "A"){names(data)[which(names(data) == treatment)] <- "A"}
+  
   # if(legitimate != "L"){names(data)[which(names(data) == legitimate)] <- "L"}
+  
   if(!is.null(multicategorical)){
     if(!(all(sapply(data[, multicategorical], is.factor)))){
       stop("The variable(s) in multicategorical should be in factor format. \n
@@ -41,12 +44,14 @@ GLMM_model <- function(data,
          Only whose category level greater than 2 should be included.\n")
     }
   }
+  
   if(class(data[,cluster]) != "character"){
     stop("In case of misusing of nominal scale of Cluster variable as numeric values, please convert it as character first!")}
   
   if (fixed_intercept){
     # Handling the multi-categorical variables, i.e., varaibles specified in reference
     df_mc_dummied <- as.data.frame(matrix(1, nrow = nrow(data), ncol = 1))
+    
     # Convert them into a dummy coded dataframe 
     for (mc_var in multicategorical) {
       df_mc <- as.data.frame(data[,mc_var])
@@ -58,13 +63,14 @@ GLMM_model <- function(data,
       # attach the dummy coded variable into the dataframe
       df_mc_dummied <- cbind(df_mc_dummied, df_mc)
     }
+    
     df_mc_dummied <- df_mc_dummied[,-1]
     
     # exclude the non-covariates
     exclude_vars <- c(cluster,multicategorical,"A")
     include_vars <- setdiff(names(data),c("Y", exclude_vars))
     
-    # merge the dummied multicategorical covairtaes matrix with the other covariates
+    # merge the dummied multicategorical covariataes matrix with the other covariates
     b.mat <- as.matrix(cbind(1,cbind(data[include_vars],df_mc_dummied)))
     
     A <- data$A
@@ -88,12 +94,15 @@ GLMM_model <- function(data,
     outcome.LMM <- lmer(formula, data = cbind(Y, A, C, b.mat.df))
     
     message("...Finished!")
+    
     # fit the GLMM model
     message("Fitting the GLMM model for propensity score (this might run over 4 mins)....")
     ps.GLMM <- glmer(A ~ 0 + b.mat + (1|C), family="binomial",
                      nAGQ = n_AGQ,control = glmer_Control) # propensity score
     message("...Finished!")
+    
   } else {
+    
     # Handling the multi-categorical variables, i.e., varaibles specified in reference
     df_mc_dummied <- as.data.frame(matrix(1, nrow = nrow(data), ncol = 1))
     
@@ -185,10 +194,12 @@ fairCATE_multilevel <- function(data,
          Only whose category level greater than 2 should be included.")
     }
   }
+  
   if(class(data[,cluster]) != "character"){
     stop("In case of misusing of nominal scale of Cluster variable as numeric values, please convert it as character first!")}
   
   merged_fair_specification <- paste0(fairness, collapse = " ")
+  
   if (grepl("\\|", merged_fair_specification) && is.null(legitimate)){
     stop("It seems you plan to run on the conditional statistical disparity. \n
          But you forget to specify the legitimate variable into the argument. \n
@@ -197,12 +208,14 @@ fairCATE_multilevel <- function(data,
   
   # define the expit function
   expit <- function(x){ exp(x)/(1+exp(x))}
+  
   # define the number of clusters
   m <- length(unique(data[,cluster]))
   
   if (fixed_intercept){
-    # Handling the multi-categorical variables, i.e., varaibles specified in reference
+    # Handling the multicategorical variables, i.e., variables specified in reference
     df_mc_dummied <- as.data.frame(matrix(1, nrow = nrow(data), ncol = 1))
+    
     # Convert them into a dummy coded dataframe 
     for (mc_var in multicategorical) {
       df_mc <- as.data.frame(data[,mc_var])
@@ -214,20 +227,23 @@ fairCATE_multilevel <- function(data,
       # attach the dummy coded variable into the dataframe
       df_mc_dummied <- cbind(df_mc_dummied, df_mc)
     }
+    
     df_mc_dummied <- df_mc_dummied[,-1]
     
     # exclude the non-covariates
     exclude_vars <- c(cluster,multicategorical,"A")
     include_vars <- setdiff(names(data),c("Y", exclude_vars))
     
-    # merge the dummied multicategorical covairtaes matrix with the other covariates
+    # merge the dummied multicategorical covariataes matrix with the other covariates
     b.mat <- as.matrix(cbind(1,cbind(data[include_vars],df_mc_dummied)))
     
     A <- data$A
     C <- data[, cluster]
+    
     # cluster dummy matrix
     Cl.mat <- t(do.call(rbind, lapply(1:m, function(i) ifelse(C == i, 1, 0)))) 
     colnames(Cl.mat) <- paste0("C", 1:m)
+    
     Y <- data$Y
     
     # create an empty L matrix
@@ -303,6 +319,7 @@ fairCATE_multilevel <- function(data,
                        which((max(ps.estimate[A==0]) < ps.estimate) == TRUE)
       )
     } 
+    
     if (ps.trim == "Sturmer.2") {
       # the common range method ver.2 by Stürmer et al. Am J Epidemiol 2010;172:843–854.
       idx.exclude <- c(which((ps.estimate < quantile(ps.estimate[dat$A==1], probs = 0.05)) == TRUE),
@@ -326,11 +343,11 @@ fairCATE_multilevel <- function(data,
                         (1-A)*(Y-outcome.A0.estimate) / (1-ps.estimate) + 
                         (outcome.A1.estimate-outcome.A0.estimate) ) * b.mat)[C==cluster_id & !(1:length(C) %in% idx.exclude),]
         if ( "numeric" %in% class(mat_sub)) {
-          # PAN: this condition handles the cluster with only one observation
+          # this condition handles the cluster with only one observation
           phi.b.hat[jj,] <- mat_sub}
         else if(all(is.na(mat_sub))==T){
-          # PAN: this condition handles the cluster whose all observations are with trimmed propensity
-          # PAN: will give a weight as 0
+          # this condition handles the cluster whose all observations are with trimmed propensity
+          # will give a weight as 0
           phi.b.hat[jj,] <- rep(0,ncol(b.mat))
         } else{
           colmean <- colMeans(mat_sub)
@@ -340,9 +357,9 @@ fairCATE_multilevel <- function(data,
     }
     phi.b.hat <- colMeans(phi.b.hat)
     
-    ####################################################################################
-    # Optimization
-    ####################################################################################
+    #########################################################################
+    # Optimization                                                          #
+    #########################################################################
     
     message("Optimizing using the given fariness condition...")
     
@@ -407,6 +424,7 @@ fairCATE_multilevel <- function(data,
 
     prob$bc <- rbind(blc=-delta.v,
                      buc=delta.v)
+    
     # Cholesky factorization
     Q <- suppressWarnings(chol(Q.mat, TRUE))
     r <- attr(Q, 'rank')
@@ -468,6 +486,7 @@ fairCATE_multilevel <- function(data,
   } else {
     # Handling the multi-categorical variables, i.e., varaibles specified in reference
     df_mc_dummied <- as.data.frame(matrix(1, nrow = nrow(data), ncol = 1))
+    
     # Convert them into a dummy coded dataframe 
     for (mc_var in multicategorical) {
       df_mc <- as.data.frame(data[,mc_var])
@@ -497,6 +516,7 @@ fairCATE_multilevel <- function(data,
     
     # create an empty L matrix
     L.mat <- matrix(nrow = dim(data)[1],ncol = 0)
+    
     if (is.null(legitimate)) {
       L.mat <- NULL
       dat <- cbind(Cl.mat, data)
@@ -576,6 +596,7 @@ fairCATE_multilevel <- function(data,
     }
     
     message("Getting the cluster's weights matrix...")
+    
     # in case we want to reweight on a cluster level later on
     phi.b.hat <- matrix(NA,nrow=m, ncol=ncol(b.mat)) 
     for(jj in 1:m){
@@ -605,9 +626,9 @@ fairCATE_multilevel <- function(data,
     }
     phi.b.hat <- colMeans(phi.b.hat)
     
-    ####################################################################################
-    # Optimization
-    ####################################################################################
+    #########################################################################
+    # Optimization                                                          #
+    #########################################################################
     
     message("Optimizing using the given fariness condition...")
     
@@ -619,6 +640,7 @@ fairCATE_multilevel <- function(data,
     
     
     delta.v <- c()
+    
     # based on the input fariness argument to build the delta vector
     if (is.list(delta)){
       delta.v <- unlist(delta)
@@ -749,8 +771,8 @@ fairCATE_multilevel <- function(data,
 # ::: Data Generating Models :::
 create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
                                      cluster_size = 25,
-                                     E_var = 18, # variance of residual
-                                     R_var = 0.0001,  # variance of cluster effect in selection
+                                     R_var = 18, # variance of residual
+                                     V_var = 0.0001,  # variance of cluster effect in selection
                                      U_var = 0.0001, # variance of cluster effect in outcome
                                      clustereffect=FALSE) {
   
@@ -795,6 +817,7 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
   
   # legitimate variable, the variable you wanna control for conditional statistical disparity
   L_continuous <- rnorm(totalN, -S1 + 0.25, 1)
+  
   # discretize the L_continuous
   X14 <- ifelse(L_continuous > 0.1, 1, 0)
   
@@ -802,7 +825,7 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
   
   # ::::: 4) generate selection probabilities and potential outcome ::::::::
   
-  E <- rnorm(totalN, 0, sqrt(E_var))   # error terms for pot.   
+  E <- rnorm(totalN, 0, sqrt(R_var))   # error terms for pot.   
   
   if (clustereffect == FALSE) {
     
@@ -818,7 +841,7 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
     
   } else {
     # adding the cluster-specific random effect and increase the variance
-    R_j <- rnorm(J, 0, sqrt(R_var)) # level-2 cluster effect in selection
+    R_j <- rnorm(J, 0, sqrt(V_var)) # level-2 cluster effect in selection
     U_j <- rnorm(J, 0, sqrt(U_var)) # level-2 cluster effect in outcome
     pop$R_j <- R_j[id]
     pop$U_j <- U_j[id]
@@ -854,8 +877,8 @@ create_multileveldata_D1 <- function(cluster_num = 150, # number of clusters
 # ::: Data Generating Models: Design 2 :::
 create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
                                      cluster_size = 25,
-                                     E_var = 18, # variance of residual
-                                     R_var = 0.0001,  # variance of cluster effect in selection
+                                     R_var = 18, # variance of residual
+                                     V_var = 0.0001,  # variance of cluster effect in selection
                                      U_var = 0.0001, # variance of cluster effect in outcome
                                      clustereffect=FALSE) {
   
@@ -866,6 +889,7 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
   
   id <- as.factor(rep(1:J, each=n.clus))              # cluster id
   totalN <- length(id)
+  
   # ::::: 2) generate level-2 covariates, W: X21,X22,X23 :::::
   # cluster level sensitive variable, should be historically disadvantaged minority group
   S2 <- rbinom(J, size = 1, prob = 0.3)
@@ -893,7 +917,6 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
   
   # ::::: 3) generate level-1 covariates, Xs with cluster-specific means :::::
   
-  # PAN: 
   # individual level covariate 1
   # X11 <- rnorm(totalN, 0, 1)
   X11 <- rnorm(totalN, -S_is_2, 1)
@@ -916,7 +939,7 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
   
   # ::::: 4) generate selection probabilities and potential outcome ::::::::
   
-  E <- rnorm(totalN, 0, sqrt(E_var))   # error terms for pot.   
+  E <- rnorm(totalN, 0, sqrt(R_var))   # error terms for pot.   
   
   if (clustereffect == FALSE) {
     
@@ -947,7 +970,7 @@ create_multileveldata_D2 <- function(cluster_num = 150, # number of clusters
     
   } else {
     # add the cluster-specific random effect and increase the variance
-    R_j <- rnorm(J, 0, sqrt(R_var)) # level-2 cluster effect in selection
+    R_j <- rnorm(J, 0, sqrt(V_var)) # level-2 cluster effect in selection
     U_j <- rnorm(J, 0, sqrt(U_var)) # level-2 cluster effect in outcome
     pop$R_j <- R_j[id]
     pop$U_j <- U_j[id]

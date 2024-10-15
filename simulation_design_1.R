@@ -38,8 +38,8 @@ run_iteration <- function(iter) {
   
   df <- create_multileveldata_D1(cluster_num = 300, 
                                     cluster_size = 25, 
-                                    E_var = 0.6653, # var of residual
-                                    R_var = 1.95, # var of cluster effect in selection
+                                    R_var = 0.6653, # var of residual
+                                    V_var = 1.95, # var of cluster effect in selection
                                     U_var = 0.0776, # var of cluster effect in outcome
                                     clustereffect=TRUE)
   
@@ -50,9 +50,6 @@ run_iteration <- function(iter) {
   
   # 1.1.2, generate a random treatment A in the proportion of 0.42, similar to df$A
   dat0$id <- as.character(dat0$id)
-  
-  # PAN: 2024.07.20
-  # mutate the dat0 with intersectional sensitive variables
   
   # extract all the S related columns to save ram and runnning time
   S1 <- dat0$S1
@@ -106,7 +103,6 @@ run_iteration <- function(iter) {
   # get the average unfairness
   average_unfairness_bart <- (unfairness_1 + unfairness_2) / 2
   
-  # PAN: 2024.07.29
   # get the CATE_MSE
   MSE_CATE_BART <- MSE_CATE(cate.BART, tau)
   # get the CATE unfairness
@@ -150,7 +146,6 @@ run_iteration <- function(iter) {
   # get the average unfairness
   average_unfairness_cf <- (unfairness_1 + unfairness_2 ) / 2
   
-  # PAN: 2024.07.29
   # get the CATE_MSE
   MSE_CATE_cf <- MSE_CATE(cate_cf_pre, tau)
   # get the CATE unfairness
@@ -169,11 +164,7 @@ run_iteration <- function(iter) {
   #   PAN: 2024.08.12
   #   1.3.b Run CausalF with propensity scores     #
   # ---------------------------------------------- #
-  
-  # NOTE: as discussed in today's meeting, we will need to take the propensity scores
-  # into the causal forest model to get the average unfairness, average unfairness.
-  # Therefore, the first step is to retrieve the estimated propensity scores 
-  
+
   # 1.4.0.0 model fitting
   glmer_Control <- glmerControl(optimizer = "bobyqa",
                                 optCtrl = list(maxfun=100000))
@@ -188,11 +179,7 @@ run_iteration <- function(iter) {
                          glmer_Control = glmer_Control)
   
   # 1.4.0.1 get the unconstrained results to calculate the UG and UD
-  # PAN: 2024.07.25
-  # Please note: when set the delta to be 20, the estimated tau.hat for considering both indi and cluster levels are the
-  # the same when you consider the individual level only. This is because we actually did not impute any constraints on 
-  # individual or cluster levels.
-  
+
   ml_fr_out <- fairCATE_multilevel(data = dat0,
                                    sensitive = c("S1","S2"),
                                    legitimate = NULL,
@@ -231,9 +218,9 @@ run_iteration <- function(iter) {
   # get the average unfairness
   average_unfairness_cf_ps <- (unfairness_1 + unfairness_2 ) / 2
   
-  # PAN: 2024.07.29
   # get the CATE_MSE
   MSE_CATE_cf_ps <- MSE_CATE(cate_cf_pre, tau)
+  
   # get the CATE unfairness
   unfairness_1 <- abs(mean(cate_cf_pre[S1==1]) - mean(cate_cf_pre[S1==0]))
   unfairness_2 <- abs(mean(cate_cf_pre[S2==1]) - mean(cate_cf_pre[S2==0]))
@@ -261,7 +248,6 @@ run_iteration <- function(iter) {
   # get the average unfairness
   average_unfairness_ml_fr_init_1 <- (unfairness_1_init + unfairness_2_init ) / 2
   
-  
   # set the range of the deltas
   delta_set <- c(0.0001,0.05, 
                  seq(0.1, 2, by = 0.1), 
@@ -281,7 +267,6 @@ run_iteration <- function(iter) {
   FURG_indv_cluster_set <- c()
   FUTR_indv_cluster_set <- c()
   
-  # PAN: 2024.07.29
   RU_ml_fr_indv_CATE_set <- c()
   AU_ml_fr_indv_CATE_set <- c()
   RU_ml_fr_indv_cluster_CATE_set <- c()
@@ -331,7 +316,6 @@ run_iteration <- function(iter) {
     
     
     # calculate the UD
-    # PAN: 2024.07.25
     # revised the UD
     UD_indv_1 <- (unfairness_1_init - unfairness_1) / unfairness_1_init
     UD_indv_2 <- (unfairness_2_init - unfairness_2) / unfairness_2_init
@@ -341,7 +325,6 @@ run_iteration <- function(iter) {
     
     FUTR_indv <- - UD_indv / UG_indv
     
-    # PAN: 2024.07.29
     # get the MSE cate
     MSE_CATE_ml_fr_indv <- MSE_CATE(tau_hat, tau)
     # get the CATE unfairness
@@ -404,6 +387,7 @@ run_iteration <- function(iter) {
     
     # get the MSE cate
     MSE_CATE_ml_fr_indv_cluster <- MSE_CATE(tau_hat, tau)
+    
     # get the CATE unfairness
     unfairness_1 <- abs(mean(tau_hat[S1==1]) - mean(tau_hat[S1==0]))
     unfairness_2 <- abs(mean(tau_hat[S2==1]) - mean(tau_hat[S2==0]))
@@ -424,7 +408,6 @@ run_iteration <- function(iter) {
     FURG_indv_cluster_set <- c(FURG_indv_cluster_set, FURG_indv_cluster)
     FUTR_indv_cluster_set <- c(FUTR_indv_cluster_set, FUTR_indv_cluster)
     
-    # PAN: 2024.07.29
     RU_ml_fr_indv_CATE_set <- c(RU_ml_fr_indv_CATE_set, MSE_CATE_ml_fr_indv)
     AU_ml_fr_indv_CATE_set <- c(AU_ml_fr_indv_CATE_set, average_unfairness_ml_fr_indv_CATE)
     RU_ml_fr_indv_cluster_CATE_set <- c(RU_ml_fr_indv_cluster_CATE_set, MSE_CATE_ml_fr_indv_cluster)
