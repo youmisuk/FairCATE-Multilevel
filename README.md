@@ -304,6 +304,8 @@ These two R files use parallel computing techniques to accelerate the simulation
 
 A large RAM (at least 64 GB) is recommended. R will borrow space from your hard drive if RAM is full, which costs much more running time like 5 hours on 32GB RAM compared to 2 hours on 96GB RAM.  
 
+These two scripts run well on Apple's Mac systems.
+
 Please scroll down to the last few lines of code and replace `20` with the repetition number you'd like in this line of code:  
 ```r
 results <- parLapply(cl, 1:20, run_iteration)
