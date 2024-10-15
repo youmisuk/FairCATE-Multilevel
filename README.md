@@ -170,7 +170,7 @@ ps_out <- ml_fr_out$ps_scores
 ```
 
 
-**`create_multileveldata_D1`**  
+**`create_multileveldata_D1()`**  
 
 **Description**  
   
@@ -229,7 +229,7 @@ OTRs_true <- df$policy
 value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
 ```
 
-**`create_multileveldata_D2`**  
+**`create_multileveldata_D2()`**  
 
 **Description**  
 Based on the function `create_multileveldata_D1`, to generate multilevel data with intersectionality. If setting the argument `clustereffect=TRUE`, it will return a dataframe with:  
@@ -249,8 +249,8 @@ Based on the function `create_multileveldata_D1`, to generate multilevel data wi
 ```r
 create_multileveldata_D2 <- function(cluster_num = 150,
                                      cluster_size = 25,
-                                     E_var = 18, 
-                                     R_var = 0.0001,
+                                     R_var = 18, 
+                                     V_var = 0.0001,
                                      U_var = 0.0001, 
                                      clustereffect=FALSE)
 ```
@@ -269,8 +269,8 @@ create_multileveldata_D2 <- function(cluster_num = 150,
 # for the outcome model, and .372 for the treatment model.
 df <- create_multileveldata_D2(cluster_num = 300, 
                                     cluster_size = 25, 
-                                    E_var = 0.6653, # var of residual
-                                    R_var = 1.95, # var of cluster effect in selection
+                                    R_var = 0.6653, # var of residual
+                                    V_var = 1.95, # var of cluster effect in selection
                                     U_var = 0.0776, # var of cluster effect in outcome
                                     clustereffect=TRUE)
 
@@ -294,8 +294,5 @@ dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22",
 library(dplyr)
 dat0_is <- dat0 %>% select(-S1, -S2)
 ```
-
-
-
-
+#### 2.2.2 `simulation_design_1.R`  
 
