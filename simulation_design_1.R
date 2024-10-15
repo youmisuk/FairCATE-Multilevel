@@ -1,8 +1,4 @@
-# date: 2024.08.12
-# purpose:
-#     - this file is to add the causal forest est.Propensity model!
-#     - this file is based on the V3 and V3 runs well if you don't use cf.est.Propensity
-
+# NOTE: this file uses parallel computation to run the simulation
 
 library(MASS)
 library(matrixcalc)
