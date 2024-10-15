@@ -296,10 +296,19 @@ dat0_is <- dat0 %>% select(-S1, -S2)
 ```
 #### 2.2.2 `simulation_design_1.R` and `simulation_design_2.R`  
 
-These two R files use parallel computing technique to accelerate the simulation study process. Running either of them for 500 repetitions will be finished in about 2 hours on our platform, which is as follows:  
+These two R files use parallel computing techniques to accelerate the simulation study process. Running either of them for 500 repetitions will be finished in about 2 hours on our platform, which is as follows:  
 - OS: Windows 11 Pro
 - CPU: i7 14700F with PL1 250W, PL2 250W
 - RAM: 96 GB
 - R version: 4.4.1 (2024-06-14 ucrt) -- "Race for Your Life"
 
-A large RAM (at least 64 GB) is recomended.
+A large RAM (at least 64 GB) is recommended. R will borrow space from your hard drive if RAM is full, which costs much more running time like 5 hours on 32GB RAM compared to 2 hours on 96GB RAM.  
+
+Please scroll down to the last few lines of code and replace `20` with the repetition number you'd like in this line of code:  
+```r
+results <- parLapply(cl, 1:20, run_iteration)
+```
+
+For details about our simulation design, please refer to section 5 in [our paper](https://osf.io/preprints/psyarxiv/xz3jw). 
+
+
