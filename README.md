@@ -30,7 +30,7 @@ install.packages("dplyr")
 install.packages("fastDummies")
 ```
 
-Please note that installing `Rmosek` package is a little bit different from the traditional way. Please check [this link](https://docs.mosek.com/latest/rmosek/install-interface.html) for instruction and [this link](https://www.mosek.com/products/academic-licenses/) for requesting a free license.  
+Please note that installing `Rmosek` package is a little bit different from the traditional way. Please check [this link](https://docs.mosek.com/latest/rmosek/install-interface.html) for instructions and [this link](https://www.mosek.com/products/academic-licenses/) for requesting a free license.  
   
 ### 2.2 Running the R files  
 
@@ -57,14 +57,14 @@ GLMM_model <- function(data,
 
 **Arguments**  
 
-- `data`: a dataframe. You do not need to convert the multicategorical covariates into dummy (one-hot) codings before model fiiting. We recommend users to normalize all the continuous covariates in advance for a faster convergence in GLMM model fitting.  
-- `outcome`: a string to indicate the name of outcome vairable.  
-- `treatment`: a string to indicate the name of treatment variable. Treatment must be a binary variable for the current version.   
+- `data`: a dataframe. You do not need to convert the multicategorical covariates into dummy (one-hot) codings before model fitting. We recommend users to normalize all the continuous covariates in advance for faster convergence in GLMM model fitting.  
+- `outcome`: a string to indicate the name of the outcome variable.  
+- `treatment`: a string to indicate the name of the treatment variable. Treatment must be a binary variable for the current version.   
 - `cluster`: a string to indicate the name of the cluster id.  
-- `multicategroical`: a string array to specify all the multicategorical variables. Using `NULL` by default to indicate that there is no multicategorical variable in your dataframe. If specified, this function will automatically convert these multicategorical variables into one-hot codings. The multicategorical variable(s) must be in factor format.  
+- `multicategroical`: a string array to specify all the multicategorical variables. Use `NULL` by default to indicate that there is no multicategorical variable in your dataframe. If specified, this function will automatically convert these multicategorical variables into one-hot codings. The multicategorical variable(s) must be in factor format.  
 - `nAGQ`: integer scalar, same to the argument in `glmer()` function from the `lme4` packages. Values greater than 1 produce greater accuracy in the evaluation of the log-likelihood at the expense of speed.  
 - `fixed_intercept`: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.  
-- `gmler_Control`: a list of correct class, resulting from `glmerControl()` containing control parameters. Same to the argument `control` from the `lme4` package. It is used to solve the non-convergence issue in fitting the GLMM model.  
+- `gmler_Control`: a list of correct class, resulting from `glmerControl()` containing control parameters. Same as the argument `control` from the `lme4` package. It is used to solve the non-convergence issue in fitting the GLMM model.  
 
 **Example**  
 ```r
@@ -88,11 +88,11 @@ summary(glmm_out$ps.GLMM)
 **`fairCATE_multilevel()`**  
 
 **Description:**  
-to estimate the CATE with fairness contraint. It will return:  
+to estimate the CATE with fairness constraints. It will return:  
 - `tau.hat`: the estimated CATEs.
 - `unfair`: the unfairness on each condition you specified in the argument `fairness`.
 - `cf_outcomes`: the estimated counterfactual outcomes from the fitted outcome model.
-- `ps_scores`: the estimated propensity scores fromo the fitted treatment model.
+- `ps_scores`: the estimated propensity scores from the fitted treatment model.
 
   
 **Usage**
@@ -114,18 +114,18 @@ fairCATE_multilevel <- function(data,
 
   
 **Argument**  
-- `data`: a dataframe. You do not need to convert the multicategorical covariates into dummy (one-hot) codings before model fiiting. We recommend users to normalize all the continuous covariates in advance for a faster convergence in GLMM model fitting.  
+- `data`: a dataframe. You do not need to convert the multicategorical covariates into dummy (one-hot) codings before model fitting. We recommend users to normalize all the continuous covariates in advance for faster convergence in GLMM model fitting.  
 - `sensitive`: a string array to indicate the sensitive variable(s).
-- `legitimate`: a string array to indicate the legitimate variable(s) for conditional stastistical disparity. Using NULL by default for statistical disparity.
-- `fairness`: a formula style string array to indicate the fairness constraints. It should start with `tau ~`, where we use `tau` to represent the CATE. For example, supporse your sensitive variable is `S1` and legitimate variable is `L1`, you fairness constraint (conditional statistical disparity) should be written as `tau ~ S1|L1`, which means "get the CATE with fariness constraint on S1 after controlling for L1". The spaces between any letters or symbols in this `fairness` specification does not matter.
-- `treatment`: a string to indicate the name of treatment variable. Treatment must be a binary variable for the current version.
-- `outcome`: a string to indicate the name of outcome vairable.
+- `legitimate`: a string array to indicate the legitimate variable(s) for conditional statistical disparity. Using NULL by default for statistical disparity.
+- `fairness`: a formula style string array to indicate the fairness constraints. It should start with `tau ~`, where we use `tau` to represent the CATE. For example, suppose your sensitive variable is `S1` and the legitimate variable is `L1`, your fairness constraint (conditional statistical disparity) should be written as `tau ~ S1|L1`, which means "get the CATE with fairness constraint on S1 after controlling for L1". The spaces between any letters or symbols in this `fairness` specification do not matter.
+- `treatment`: a string to indicate the name of the treatment variable. Treatment must be a binary variable for the current version.
+- `outcome`: a string to indicate the name of the outcome variable.
 - `cluster`: a string to indicate the name of the cluster id.
-- `multicategroical`: a string array to specify all the multicategorical variables. Using `NULL` by default to indicate that there is no multicategorical variable in your dataframe. If specified, this function will automatically convert these multicategorical variables into one-hot codings. The multicategorical variable(s) must be in factor format.
+- `multicategroical`: a string array to specify all the multicategorical variables. Use `NULL` by default to indicate that there is no multicategorical variable in your dataframe. If specified, this function will automatically convert these multicategorical variables into one-hot codings. The multicategorical variable(s) must be in factor format.
 - `outcome.LMM`: a fitted outcome model returned from the function `GLMM_model`.
 - `ps.GLMM`: a fitted treatment model returned from the function `GLMM_model`.
 - `fixed_intercept`: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.
-- `delta`: a numeric array or a list to indicate the (un)fairness tolerance level $\delta$. Usually, you can use 20 to indicate no fairness constraint (i.e., $\delta = \infty$) and 0.0001 for most strict fariness constraint (i.e., $\delta = 0$). For example, if you set `fairness` argument to be `c("tau~S1", "tau~S2")` and you want to give fairness constraints on both two conditions, your `delta` should be `delta = c(0.0001, 0.0001)`.
+- `delta`: a numeric array or a list to indicate the (un)fairness tolerance level $\delta$. Usually, you can use 20 to indicate no fairness constraint (i.e., $\delta = \infty$) and 0.0001 for the most strict fairness constraint (i.e., $\delta = 0$). For example, if you set the `fairness` argument to be `c("tau~S1", "tau~S2")` and you want to give fairness constraints on both two conditions, your `delta` should be `delta = c(0.0001, 0.0001)`.
 - `ps.trim`: a string to choose the trimming method for propensity scores. It should be either "Sturmer.1" (the default) or "Sturmer.2". "Sturmer.1" is the common range method ver.1 by Stürmer et al. Am J Epidemiol 2021;190:1659–1670. "Sturmer.2" is the common range method ver.2 by Stürmer et al. Am J Epidemiol 2010;172:843–854.
 
 **Example**  
@@ -198,8 +198,8 @@ create_multileveldata_D1 <- function(cluster_num = 150,
 ```
 
 **Argument**  
-- `cluster_num`: a integer to define the number of clusters.
-- `cluster_size`: a integer to define the cluster size.
+- `cluster_num`: an integer to define the number of clusters.
+- `cluster_size`: an integer to define the cluster size.
 - `E_var`: a float to define the variance of residual in the outcome model.
 - `R_var`: a float to define the variance of cluster effect in treatment.
 - `U_var`: a float to define the variance of cluster effect in outcome.
@@ -207,7 +207,7 @@ create_multileveldata_D1 <- function(cluster_num = 150,
 
 **Example**  
 ```r
-# generate 7500 observations nested in 300 clusters, with the conditional ICC of .105
+# Generate 7500 observations nested in 300 clusters, with the conditional ICC of .105
 # for the outcome model, and .372 for the treatment model.
 df <- create_multileveldata_D1(cluster_num = 300, 
                                 cluster_size = 25, 
@@ -256,8 +256,8 @@ create_multileveldata_D2 <- function(cluster_num = 150,
 ```
 
 **Argument**  
-- `cluster_num`: a integer to define the number of clusters.
-- `cluster_size`: a integer to define the cluster size.
+- `cluster_num`: an integer to define the number of clusters.
+- `cluster_size`: an integer to define the cluster size.
 - `E_var`: a float to define the variance of residual in the outcome model.
 - `R_var`: a float to define the variance of cluster effect in treatment.
 - `U_var`: a float to define the variance of cluster effect in outcome.
@@ -265,7 +265,7 @@ create_multileveldata_D2 <- function(cluster_num = 150,
 
 **Example**  
 ```r
-# generate 7500 observations nested in 300 clusters, with the conditional ICC of .105
+# Generate 7500 observations nested in 300 clusters, with the conditional ICC of .105
 # for the outcome model, and .372 for the treatment model.
 df <- create_multileveldata_D2(cluster_num = 300, 
                                     cluster_size = 25, 
