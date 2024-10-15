@@ -126,7 +126,7 @@ fairCATE_multilevel <- function(data,
 - `ps.GLMM`: a fitted treatment model returned from the function `GLMM_model`.
 - `fixed_intercept`: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.
 - `delta`: a numeric array or a list to indicate the (un)fairness tolerance level $\delta$. Usually, you can use 20 to indicate no fairness constraint (i.e., $\delta = \infty$) and 0.0001 for the most strict fairness constraint (i.e., $\delta = 0$). For example, if you set the `fairness` argument to be `c("tau~S1", "tau~S2")` and you want to give fairness constraints on both two conditions, your `delta` should be `delta = c(0.0001, 0.0001)`.
-- `ps.trim`: a string to choose the trimming method for propensity scores. It should be either "Sturmer.1" (the default) or "Sturmer.2". "Sturmer.1" is the common range method ver.1 by Stürmer et al. Am J Epidemiol 2021;190:1659–1670. "Sturmer.2" is the common range method ver.2 by Stürmer et al. Am J Epidemiol 2010;172:843–854.
+- `ps.trim`: a string to choose the trimming method for propensity scores. It should be either "Sturmer.1" (the default) or "Sturmer.2". "Sturmer.1" is the common range method ver.1 by [Stürmer et al. Am J Epidemiol 2021;190:1659–1670](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8327194/). "Sturmer.2" is the common range method ver.2 by [Stürmer et al. Am J Epidemiol 2010;172:843–854](https://pubmed.ncbi.nlm.nih.gov/20716704/).
 
 **Example**  
 ```r
