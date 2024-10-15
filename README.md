@@ -1,5 +1,15 @@
 # FairCATE-Multilevel  
-  
+
+## Table of Contents
+
+1. [Overview](#1-overview)
+2. [R files](#2-r-files)  
+    2.1 [Preparation](#21-preparation)  
+    2.2 [Running the R files](#22-running-the-r-files)  
+        2.2.1 [functions.R](#221-functionsr)  
+        2.2.2 [simulation_design_1.R and simulation_design_2.R](#222-simulation_design_1r-and-simulation_design_2r)  
+        2.2.3 [simulation_results_analysis.R and simulation_results_visualizations.R](#223-simulation_results_analysisr-and-simulation_results_visualizationsr)
+
 ## 1 Overview  
 
 **Title**: Fair and Robust Estimation of Heterogeneous Treatment Effects for Optimal Policies in Multilevel Studies
