@@ -309,6 +309,10 @@ Please scroll down to the last few lines of code and replace `20` with the repet
 results <- parLapply(cl, 1:20, run_iteration)
 ```
 
-For details about our simulation design, please refer to section 5 in [our paper](https://osf.io/preprints/psyarxiv/xz3jw). 
+For details about our simulation design, please refer to section **5 Simulation Study** in [our paper](https://osf.io/preprints/psyarxiv/xz3jw).  
+
+#### 2.2.3 `simulation_results_analysis.R` and `simulation_results_visualizations.R`  
+
+After running the simulation scripts in section 2.2.2, please run these two files for results analysis and visualizations. `simulation_results_analysis.R` will return the results similar to `Table 1` and `Table 2` in [our paper](https://osf.io/preprints/psyarxiv/xz3jw). And, `simulation_results_visualizations.R` will return the plots similar to `Figure 1`, `Figure 2`, and `Figure S1` in  [our paper](https://osf.io/preprints/psyarxiv/xz3jw).
 
 
