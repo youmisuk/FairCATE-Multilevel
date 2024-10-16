@@ -9,6 +9,7 @@
         2.2.1 [functions.R](#221-functionsr)  
         2.2.2 [simulation_design_1.R and simulation_design_2.R](#222-simulation_design_1r-and-simulation_design_2r)  
         2.2.3 [simulation_results_analysis.R and simulation_results_visualizations.R](#223-simulation_results_analysisr-and-simulation_results_visualizationsr)
+3. [Citation](#3-Citation) 
 
 ## 1 Overview  
 
