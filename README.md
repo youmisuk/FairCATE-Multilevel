@@ -325,6 +325,15 @@ For details about our simulation design, please refer to section **5 Simulation 
 
 #### 2.2.3 `simulation_results_analysis.R` and `simulation_results_visualizations.R`  
 
-After running the simulation scripts in section 2.2.2, please run these two files for results analysis and visualizations. `simulation_results_analysis.R` will return the results similar to `Table 1` and `Table 2` in [our paper](https://osf.io/preprints/psyarxiv/xz3jw). And, `simulation_results_visualizations.R` will return the plots similar to `Figure 1`, `Figure 2`, and `Figure S1` in  [our paper](https://osf.io/preprints/psyarxiv/xz3jw).
+After running the simulation scripts in section 2.2.2, please run these two files for results analysis and visualizations. `simulation_results_analysis.R` will return the results similar to `Table 1` and `Table 2` in [our paper](https://osf.io/preprints/psyarxiv/xz3jw). And, `simulation_results_visualizations.R` will return the plots similar to `Figure 1`, `Figure 2`, and `Figure S1` in  [our paper](https://osf.io/preprints/psyarxiv/xz3jw).  
 
-
+## 3 Citation  
+```
+@article{Suk2024fair,
+  title={Fair and Robust Estimation of Heterogeneous Treatment Effects for Optimal Policies in Multilevel Studies},
+  author={Suk, Youmi and Park, Chan and Pan, Chenguang and Kim, Kwangho},
+  journal={PsyArXiv preprint},
+  year={2024},
+  doi={10.31234/osf.io/xz3jw}
+}
+```
