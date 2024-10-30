@@ -202,8 +202,8 @@ To generate the multilevel (individual-level and cluster-level) data. If setting
 ```r
 create_multileveldata_D1 <- function(cluster_num = 150,
                                      cluster_size = 25,
-                                     E_var = 18, 
-                                     R_var = 0.0001,
+                                     R_var = 18, 
+                                     V_var = 0.0001,
                                      U_var = 0.0001, 
                                      clustereffect=FALSE)
 ```
@@ -222,8 +222,8 @@ create_multileveldata_D1 <- function(cluster_num = 150,
 # for the outcome model, and .372 for the treatment model.
 df <- create_multileveldata_D1(cluster_num = 300, 
                                 cluster_size = 25, 
-                                E_var = 0.6653, # var of residual
-                                R_var = 1.95, # var of cluster effect in selection
+                                R_var = 0.6653, # var of residual
+                                V_var = 1.95, # var of cluster effect in selection
                                 U_var = 0.0776, # var of cluster effect in outcome
                                 clustereffect=TRUE)
 
@@ -338,3 +338,8 @@ After running the simulation scripts in section 2.2.2, please run these two file
   doi={10.31234/osf.io/xz3jw}
 }
 ```
+
+## 4 Updates  
+
+- 2024.09: Repo initialized;
+- 2024.10: Adjusted the layouts, revised the code's comments, changed the parameters' names to be consistent with our paper;  
