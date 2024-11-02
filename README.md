@@ -212,8 +212,8 @@ create_multileveldata_D1 <- function(cluster_num = 150,
 **Argument**  
 - `cluster_num`: an integer to define the number of clusters.
 - `cluster_size`: an integer to define the cluster size.
-- `E_var`: a float to define the variance of residual in the outcome model.
-- `R_var`: a float to define the variance of cluster effect in treatment.
+- `R_var`: a float to define the variance of residual in the outcome model.
+- `V_var`: a float to define the variance of cluster effect in treatment.
 - `U_var`: a float to define the variance of cluster effect in outcome.
 - `clustereffect`: logical. To determine whether to generate multilevel data.
 
@@ -270,8 +270,8 @@ create_multileveldata_D2 <- function(cluster_num = 150,
 **Argument**  
 - `cluster_num`: an integer to define the number of clusters.
 - `cluster_size`: an integer to define the cluster size.
-- `E_var`: a float to define the variance of residual in the outcome model.
-- `R_var`: a float to define the variance of cluster effect in treatment.
+- `R_var`: a float to define the variance of residual in the outcome model.
+- `V_var`: a float to define the variance of cluster effect in treatment.
 - `U_var`: a float to define the variance of cluster effect in outcome.
 - `clustereffect`: logical. To determine whether to generate multilevel data.
 
