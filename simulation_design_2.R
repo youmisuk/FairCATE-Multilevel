@@ -1,5 +1,8 @@
 # NOTE: this file uses parallel computation to run the simulation
 
+rm(list = ls())
+gc()
+
 library(MASS)
 library(matrixcalc)
 library(mbend)
@@ -35,16 +38,18 @@ run_iteration <- function(iter) {
   # 1.1.1, generate simulated data
   
   df <- create_multileveldata_D2(cluster_num = 300, 
-                                    cluster_size = 25, 
-                                    R_var = 0.6653, # var of residual
-                                    V_var = 1.95, # var of cluster effect in selection
-                                    U_var = 0.0776, # var of cluster effect in outcome
-                                    clustereffect=TRUE)
+                                 cluster_size_min = 20,
+                                 cluster_size_max = 50,
+                                 R_var = 0.6653, # var of residual
+                                 V_var = 1.5, # var of cluster effect in selection
+                                 U_var = 0.0776, # var of cluster effect in outcome
+                                 tau_var = 0, # var of tau
+                                 clustereffect=TRUE)
   
   
   ATE_true <- mean(df$tau)
   value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
-  dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","A","Y","S_is_1","S_is_2","S_is_3")]
+  dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","S2_2","A","Y","S_is_1","S_is_2","S_is_3")]
   
   # 1.1.2, generate a random treatment A in the proportion of 0.42, similar to df$A
   dat0$id <- as.character(dat0$id)
@@ -96,7 +101,7 @@ run_iteration <- function(iter) {
   #                   keepTrees = FALSE)
   
   out.BART <- bartc(response = dat0_is$Y, treatment = dat0_is$A, 
-                    confounders = dat0_is[, c("X11","X12","X13","S_is_1","X14","X21","X22","X23","S_is_2","S_is_3")], 
+                    confounders = dat0_is[, c("X11","X12","X13","S_is_1","X14","X21","X22","X23","S2_2","S_is_2","S_is_3")], 
                     method.rsp = "bart", method.trt = "bart", 
                     p.scoreAsCovariate = TRUE, 
                     use.rbrt = FALSE, 
@@ -148,7 +153,7 @@ run_iteration <- function(iter) {
   #                         Y = dat0$Y, 
   #                         W = dat0$A) 
   
-  out.cf <- causal_forest(X = dat0_is[, c("X11","X12","X13","S_is_1","X14","X21","X22","X23","S_is_2","S_is_3")], 
+  out.cf <- causal_forest(X = dat0_is[, c("X11","X12","X13","S_is_1","X14","X21","X22","X23","S2_2","S_is_2","S_is_3")], 
                           Y = dat0_is$Y, 
                           W = dat0_is$A) 
   
@@ -194,7 +199,8 @@ run_iteration <- function(iter) {
                          treatment = "A",
                          cluster = "id",
                          n_AGQ = 2,
-                         fixed_intercept = FALSE,
+                         fixed_intercept = TRUE,
+                         random_slope = TRUE,
                          glmer_Control = glmer_Control)
   
   glmm_out_is <- GLMM_model(data = dat0_is,
@@ -202,12 +208,13 @@ run_iteration <- function(iter) {
                             treatment = "A",
                             cluster = "id",
                             n_AGQ = 2,
-                            fixed_intercept = FALSE,
+                            fixed_intercept = TRUE,
+                            random_slope = TRUE,
                             glmer_Control = glmer_Control)
   
   # 1.4.0.1 get the unconstrained results to calculate the UG and UD
   ml_fr_out <- fairCATE_multilevel(data = dat0,
-                                   sensitive = c("S1","S2"),
+                                   sensitive = c("S1","S2","S2_2"),
                                    legitimate = NULL,
                                    fairness = c("tau~S1","tau~S2"),
                                    treatment = "A",
@@ -216,9 +223,9 @@ run_iteration <- function(iter) {
                                    multicategorical = NULL,
                                    outcome.LMM = glmm_out$outcome.LMM,
                                    ps.GLMM = glmm_out$ps.GLMM,
-                                   fixed_intercept = FALSE,
                                    delta = c(20,20),
-                                   ps.trim="Sturmer.1")
+                                   ps.trim="Sturmer.1",
+                                   tau_var_j = NULL)
   
   # 1.4.0.4 get the unconstrained results to calculate the UG and UD
   ml_fr_out_is <- fairCATE_multilevel(data = dat0_is,
@@ -231,9 +238,9 @@ run_iteration <- function(iter) {
                                       multicategorical = NULL,
                                       outcome.LMM = glmm_out_is$outcome.LMM,
                                       ps.GLMM = glmm_out_is$ps.GLMM,
-                                      fixed_intercept = FALSE,
                                       delta = c(20, 20, 20),
-                                      ps.trim="Sturmer.1")
+                                      ps.trim="Sturmer.1",
+                                      tau_var_j = NULL)
 
   
   # --------------------- #
@@ -330,9 +337,9 @@ run_iteration <- function(iter) {
                                      multicategorical = NULL,
                                      outcome.LMM = glmm_out$outcome.LMM,
                                      ps.GLMM = glmm_out$ps.GLMM,
-                                     fixed_intercept = FALSE,
                                      delta = c(delta),
-                                     ps.trim="Sturmer.1")
+                                     ps.trim="Sturmer.1",
+                                     tau_var_j = NULL)
     
     tau_hat <- ml_fr_out$tau_hat
     # get the OTR, value
@@ -392,9 +399,9 @@ run_iteration <- function(iter) {
                                      multicategorical = NULL,
                                      outcome.LMM = glmm_out$outcome.LMM,
                                      ps.GLMM = glmm_out$ps.GLMM,
-                                     fixed_intercept = FALSE,
                                      delta = c(delta, delta),
-                                     ps.trim="Sturmer.1")
+                                     ps.trim="Sturmer.1",
+                                     tau_var_j = NULL)
     
     tau_hat <- ml_fr_out$tau_hat
     # get the OTR, value
@@ -458,9 +465,9 @@ run_iteration <- function(iter) {
                                         multicategorical = NULL,
                                         outcome.LMM = glmm_out_is$outcome.LMM,
                                         ps.GLMM = glmm_out_is$ps.GLMM,
-                                        fixed_intercept = FALSE,
                                         delta = c(delta, delta, delta),
-                                        ps.trim="Sturmer.1")
+                                        ps.trim="Sturmer.1",
+                                        tau_var_j = NULL)
     
     tau_hat_is <- ml_fr_out_is$tau_hat
     # get the OTR, value
@@ -598,13 +605,14 @@ clusterEvalQ(cl, {
 
 clusterExport(cl, c("run_iteration", "create_multileveldata_D2", "GLMM_model", 
                     "fairCATE_multilevel"))
-results <- parLapply(cl, 1:20, run_iteration)
+results <- parLapply(cl, 1:500, run_iteration)
 stopCluster(cl)
 # save the results
-save(results, file = "results/Simulation_Design_2_results_20_reps.rda")
+save(results, file = "results/Simulation_Design_2_results_500_reps.rda")
 
 time_1 <- Sys.time()
 
 time_1-time_0
 
+beepr::beep()
 

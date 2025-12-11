@@ -1,3 +1,9 @@
+# date: 2025.04.27
+# purpose:
+#     - design 1 simulation in parallel.
+#     - this file is based on the Github version but uses the latest DGP 
+#       and multilevel fitting functions
+
 # NOTE: this file uses parallel computation to run the simulation
 
 library(MASS)
@@ -32,17 +38,26 @@ run_iteration <- function(iter) {
   
   # 1.1.1, generate simulated data
   
-  df <- create_multileveldata_D1(cluster_num = 300, 
-                                    cluster_size = 25, 
-                                    R_var = 0.6653, # var of residual
-                                    V_var = 1.95, # var of cluster effect in selection
-                                    U_var = 0.0776, # var of cluster effect in outcome
-                                    clustereffect=TRUE)
+  # df <- create_multileveldata_D1(cluster_num = 300, 
+  #                                cluster_size = 25, 
+  #                                R_var = 0.6653, # var of residual
+  #                                V_var = 1.95, # var of cluster effect in selection
+  #                                U_var = 0.0776, # var of cluster effect in outcome
+  #                                clustereffect=TRUE)
+  df <- create_multileveldata_D1(cluster_num = 300, # number of clusters
+                                 cluster_size_min = 20,
+                                 cluster_size_max = 50,
+                                 R_var = 0.6653, #0.6653 variance of residual
+                                 V_var = 1.5,  # 0.8 variance of cluster effect in selection
+                                 U_var = 0.0776, # 0.3 variance of cluster effect in outcome
+                                 tau_var = 0, # 0.2 variance of cluster effect in treatment
+                                 clustereffect=TRUE)
   
   
   ATE_true <- mean(df$tau)
   value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
-  dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","A","Y")]
+  # dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","A","Y")]
+  dat0 <- df[, c("id", "X11", "X12", "X13", "S1", "X14", "X21", "X22", "X23", "S2", "S2_2", "A", "Y")]
   
   # 1.1.2, generate a random treatment A in the proportion of 0.42, similar to df$A
   dat0$id <- as.character(dat0$id)
@@ -74,7 +89,7 @@ run_iteration <- function(iter) {
   
   # 1.2.1 fit BART causal model for CATE
   out.BART <- bartc(response = dat0$Y, treatment = dat0$A, 
-                    confounders = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2")], 
+                    confounders = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2","S2_2")], 
                     method.rsp = "bart", method.trt = "bart", 
                     p.scoreAsCovariate = TRUE, 
                     use.rbrt = FALSE, 
@@ -119,7 +134,7 @@ run_iteration <- function(iter) {
   
   # 1.3.1 implement Causal Forests with 
   # X = confounders; Y = outcome; W = treatment
-  out.cf <- causal_forest(X = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2")], 
+  out.cf <- causal_forest(X = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2","S2_2")], 
                           Y = dat0$Y, 
                           W = dat0$A) 
   
@@ -160,7 +175,7 @@ run_iteration <- function(iter) {
   #   PAN: 2024.08.12
   #   1.3.b Run CausalF with propensity scores     #
   # ---------------------------------------------- #
-
+  
   # 1.4.0.0 model fitting
   glmer_Control <- glmerControl(optimizer = "bobyqa",
                                 optCtrl = list(maxfun=100000))
@@ -171,13 +186,14 @@ run_iteration <- function(iter) {
                          treatment = "A",
                          cluster = "id",
                          n_AGQ = 2,
-                         fixed_intercept = FALSE,
+                         fixed_intercept = TRUE,
+                         random_slope = FALSE,
                          glmer_Control = glmer_Control)
   
   # 1.4.0.1 get the unconstrained results to calculate the UG and UD
-
+  
   ml_fr_out <- fairCATE_multilevel(data = dat0,
-                                   sensitive = c("S1","S2"),
+                                   sensitive = c("S1","S2","S2_2"),
                                    legitimate = NULL,
                                    fairness = c("tau~S1","tau~S2"),
                                    treatment = "A",
@@ -186,12 +202,12 @@ run_iteration <- function(iter) {
                                    multicategorical = NULL,
                                    outcome.LMM = glmm_out$outcome.LMM,
                                    ps.GLMM = glmm_out$ps.GLMM,
-                                   fixed_intercept = FALSE,
                                    delta = c(20,20),
-                                   ps.trim="Sturmer.1")
+                                   ps.trim="Sturmer.1",
+                                   tau_var_j = df$tau_var_j)
   
   # 1.3.b.1 re-run the causal forest model with propensity scores
-  out.cf <- causal_forest(X = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2")], 
+  out.cf <- causal_forest(X = dat0[, c("X11","X12","X13","S1","X14","X21","X22","X23","S2","S2_2")], 
                           Y = dat0$Y, 
                           W = dat0$A,
                           W.hat = ml_fr_out$ps_scores)
@@ -274,7 +290,7 @@ run_iteration <- function(iter) {
     # 1.4.1 
     # fair constraints on the individual level only
     ml_fr_out <- fairCATE_multilevel(data = dat0,
-                                     sensitive = c("S1"),
+                                     #sensitive = c("S1"),
                                      legitimate = NULL,
                                      fairness = c("tau~S1"),
                                      treatment = "A",
@@ -283,9 +299,10 @@ run_iteration <- function(iter) {
                                      multicategorical = NULL,
                                      outcome.LMM = glmm_out$outcome.LMM,
                                      ps.GLMM = glmm_out$ps.GLMM,
-                                     fixed_intercept = FALSE,
+                                     #fixed_intercept = FALSE,
                                      delta = c(delta),
-                                     ps.trim="Sturmer.1")
+                                     ps.trim="Sturmer.1",
+                                     tau_var_j = df$tau_var_j)
     
     tau_hat <- ml_fr_out$tau_hat
     # get the OTR, value
@@ -332,7 +349,7 @@ run_iteration <- function(iter) {
     # 1.4.2 
     # fair constraints on both individual and cluster levels
     ml_fr_out <- fairCATE_multilevel(data = dat0,
-                                     sensitive = c("S1","S2"),
+                                     #sensitive = c("S1","S2"),
                                      legitimate = NULL,
                                      fairness = c("tau~S1", "tau~S2"),
                                      treatment = "A",
@@ -341,9 +358,10 @@ run_iteration <- function(iter) {
                                      multicategorical = NULL,
                                      outcome.LMM = glmm_out$outcome.LMM,
                                      ps.GLMM = glmm_out$ps.GLMM,
-                                     fixed_intercept = FALSE,
+                                     #fixed_intercept = FALSE,
                                      delta = c(delta, delta),
-                                     ps.trim="Sturmer.1")
+                                     ps.trim="Sturmer.1",
+                                     tau_var_j = df$tau_var_j)
     
     tau_hat <- ml_fr_out$tau_hat
     # get the OTR, value
@@ -458,15 +476,14 @@ clusterEvalQ(cl, {
 })
 
 clusterExport(cl, c("run_iteration", "create_multileveldata_D1", "GLMM_model", "fairCATE_multilevel"))
-results <- parLapply(cl, 1:20, run_iteration)
+results <- parLapply(cl, 1:500, run_iteration)
 stopCluster(cl)
 
 time_1 <- Sys.time()
 
 time_1-time_0
 # save the results
-save(results, file = "results/Simulation_Design_1_results_20_reps.rda")
-
+save(results, file = "results/Simulation_Design_1_results_500_reps.rda")
 
 
 

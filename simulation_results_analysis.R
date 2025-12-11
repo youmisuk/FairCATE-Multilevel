@@ -3,8 +3,8 @@
 # design_1 <- FALSE
 # load("results/Simulation_Design_2_results_20_reps.rda")
 
-design_1 <- TRUE
-load("results/Simulation_Design_1_results_20_reps.rda")
+design_1 <- FALSE
+load("results/Simulation_Design_2_results_500_reps.rda")
 
 length(results)
 

@@ -1,6 +1,6 @@
 library(ggplot2)
 
-load("results/Simulation_Design_1_results_20_reps.rda")
+load("results/Simulation_Design_1_results_500_reps.rda")
 
 
 list_to_analze <- c("value_ml_fr_indv_set", "RU_ml_fr_indv_set", "AU_ml_fr_indv_set",
@@ -233,8 +233,9 @@ ggsave(
 rm(list = ls())
 gc()
 
+library(ggplot2)
 
-load("results/Simulation_Design_2_results_20_reps.rda")
+load("results/Simulation_Design_2_results_500_reps.rda")
 
 list_to_analze <- c("value_ml_fr_indv_set", "RU_ml_fr_indv_set", "AU_ml_fr_indv_set",
                     "value_ml_fr_indv_cluster_set", "RU_ml_fr_indv_cluster_set", "AU_ml_fr_indv_cluster_set",
@@ -304,7 +305,7 @@ data <- rbind(data1, data2, data3)
 x_max <- max(AU_ml_fr_indv_set_mean, AU_ml_fr_indv_cluster_set_mean, AU_ml_fr_is_set_mean)
 y_max <- round(max(RU_ml_fr_indv_set_mean, RU_ml_fr_indv_cluster_set_mean, RU_ml_fr_is_set_mean),3)
 y_min <- round(min(RU_ml_fr_indv_set_mean, RU_ml_fr_indv_cluster_set_mean, RU_ml_fr_is_set_mean),3)
-y_interval <- round((y_max - y_min) / 5,3)
+y_interval <- round((y_max - y_min) / 5,4)
 x_interval <- round(x_max / 5,2)
 
 line_thick <- 1.5
@@ -318,17 +319,21 @@ p3 <- ggplot(data, aes(x = AU, y = RU, color = Group, shape = Group)) +
   labs(x = "Mean Unfairness", y = "Relative Utility") +
   scale_x_continuous(limits = c(0.00, x_max), 
                      breaks = seq(0, x_max, by = x_interval)) +
-  scale_y_continuous(limits = c(y_min - 2*y_interval, y_max + 2*y_interval), 
-                     breaks = seq(y_min - 2*y_interval, y_max + 2*y_interval, y_interval)) +
+  scale_y_continuous(limits = c(y_min - 2.5*y_interval, y_max + 1.5*y_interval), 
+                     breaks = seq(y_min - 2.5*y_interval, y_max + 1.5*y_interval, y_interval)) +
   # Add text annotations
   annotate("text", 
-           x = AU_ml_fr_indv_cluster_set_mean[1]-0.025, 
-           y = RU_ml_fr_indv_cluster_set_mean[1]-0.0015, 
+           # x = AU_ml_fr_indv_cluster_set_mean[1]-0.009, 
+           x = 0.010,
+           # y = RU_ml_fr_indv_cluster_set_mean[1]-0.0015, 
+           y = 0.1204,
            label = bquote(delta == .("0.0001")), 
            color = "black", hjust = 0,  alpha = 0.28, size = 6)  +
   annotate("text", 
-           x = AU_ml_fr_indv_set_mean[length(AU_ml_fr_indv_set_mean) - 1]-0.025, 
-           y = RU_ml_fr_indv_set_mean[length(RU_ml_fr_indv_set_mean) - 1] + 0.0015, 
+           #x = AU_ml_fr_indv_set_mean[length(AU_ml_fr_indv_set_mean) - 1]-0.025, 
+           x = 0.145,
+           #y = RU_ml_fr_indv_set_mean[length(RU_ml_fr_indv_set_mean) - 1] + 0.0015, 
+           y = 0.1276,
            label = expression(delta == infinity), 
            color = "black", hjust = 0,  alpha = 0.6, size = 6)  +
   # Add custom grid lines
@@ -403,17 +408,21 @@ p4 <- ggplot(data, aes(x = AU, y = RU, color = Group, shape = Group)) +
   labs(x = "Mean Unfairness", y = "Mean Squared Error") +
   scale_x_continuous(limits = c(0.00, x_max), 
                      breaks = seq(0, x_max, by = x_interval)) +
-  scale_y_continuous(limits = c(y_min - 2*y_interval, y_max + 2*y_interval), 
-                     breaks = seq(y_min - 2*y_interval, y_max + 2*y_interval, y_interval)) +
+  scale_y_continuous(limits = c(y_min - 2*y_interval, y_max + 2*y_interval),
+                     breaks = seq(y_min - 1*y_interval, y_max + 2*y_interval, y_interval)) +
   # Add text annotations
   annotate("text", 
-           x = AU_ml_fr_indv_cluster_CATE_set_mean[1] - 0.06, 
-           y = RU_ml_fr_indv_cluster_CATE_set_mean[1]  + 0.03, 
+           #x = AU_ml_fr_indv_cluster_CATE_set_mean[1] - 0.06, 
+           x = 0.05,
+           #y = RU_ml_fr_indv_cluster_CATE_set_mean[1]  + 0.03, 
+           y = 0.154,
            label = bquote(delta == .("0.0001")), 
            color = "black", hjust = 0,  alpha = 0.28, size = 6)  +
   annotate("text", 
-           x = AU_ml_fr_indv_CATE_set_mean[length(AU_ml_fr_indv_CATE_set_mean) - 1] - 0.06, 
-           y = RU_ml_fr_indv_CATE_set_mean[length(RU_ml_fr_indv_CATE_set_mean) - 1] + 0.03, 
+           #x = AU_ml_fr_indv_CATE_set_mean[length(AU_ml_fr_indv_CATE_set_mean) - 1] - 0.06, 
+           x = 0.460,
+           #y = RU_ml_fr_indv_CATE_set_mean[length(RU_ml_fr_indv_CATE_set_mean) - 1] + 0.03, 
+           y = 0.020,
            label = expression(delta == infinity), 
            color = "black", hjust = 0,  alpha = 0.6, size = 6)  +
   # Add custom grid lines
