@@ -121,7 +121,8 @@ fairCATE_multilevel <- function(data,
                                 ps.GLMM,
                                 fixed_intercept = TRUE,
                                 delta,
-                                ps.trim="Sturmer.1")
+                                ps.trim="Sturmer.1",
+                                tau_var_j=NULL)
 ```
 
   
@@ -139,6 +140,8 @@ fairCATE_multilevel <- function(data,
 - `fixed_intercept`: logical. Whether to include a fixed grand intercept in the outcome model. Using `TRUE` by default. This may depend on your research setting.
 - `delta`: a numeric array or a list to indicate the (un)fairness tolerance level $\delta$. Usually, you can use 20 to indicate no fairness constraint (i.e., $\delta = \infty$) and 0.0001 for the most strict fairness constraint (i.e., $\delta = 0$). For example, if you set the `fairness` argument to be `c("tau~S1", "tau~S2")` and you want to give fairness constraints on both two conditions, your `delta` should be `delta = c(0.0001, 0.0001)`.
 - `ps.trim`: a string to choose the trimming method for propensity scores. It should be either "Sturmer.1" (the default) or "Sturmer.2". "Sturmer.1" is the common range method ver.1 by [Stürmer et al. Am J Epidemiol 2021;190:1659–1670](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8327194/). "Sturmer.2" is the common range method ver.2 by [Stürmer et al. Am J Epidemiol 2010;172:843–854](https://pubmed.ncbi.nlm.nih.gov/20716704/).
+- `tau_var_j`: adding the tau_var_j to the function for a correctly specified projection if we add the random slope into the DGP after predicting the counterfactuals and propensity scores, I augmented the b.mat to b.mat.aug with tau_var_j column. There will be no influence if it is NULL. You need to specify the tau_var_j like tau_var_j = data$tau_var_j
+  
 
 **Example**  
 ```r
@@ -202,30 +205,35 @@ To generate the multilevel (individual-level and cluster-level) data. If setting
 **Usage**  
 ```r
 create_multileveldata_D1 <- function(cluster_num = 150,
-                                     cluster_size = 25,
+                                     cluster_size_min = 20,
+                                     cluster_size_max = 50, 
                                      R_var = 18, 
                                      V_var = 0.0001,
-                                     U_var = 0.0001, 
+                                     U_var = 0.0001,
+                                     tau_var = 0,
                                      clustereffect=FALSE)
 ```
 
 **Argument**  
 - `cluster_num`: an integer to define the number of clusters.
-- `cluster_size`: an integer to define the cluster size.
+- `cluster_size_min`: an integer to define the minimal size of clusters.
+- `cluster_size_max`: an integer to define the maximal size of clusters.
 - `R_var`: a float to define the variance of residual in the outcome model.
 - `V_var`: a float to define the variance of cluster effect in treatment.
 - `U_var`: a float to define the variance of cluster effect in outcome.
+- `tau_var`: a float to define the variance of the variance in the treatment effect;
 - `clustereffect`: logical. To determine whether to generate multilevel data.
 
 **Example**  
 ```r
-# Generate 7500 observations nested in 300 clusters, with the conditional ICC of .105
-# for the outcome model, and .372 for the treatment model.
+# You can customize the range of cluster size now.
 df <- create_multileveldata_D1(cluster_num = 300, 
-                                cluster_size = 25, 
+                                cluster_size_min = 20,
+                                cluster_size_max = 50, 
                                 R_var = 0.6653, # var of residual
-                                V_var = 1.95, # var of cluster effect in selection
+                                V_var = 1.5, # var of cluster effect in selection
                                 U_var = 0.0776, # var of cluster effect in outcome
+                                tau_var = 0, # var of cluster effect in treatment
                                 clustereffect=TRUE)
 
 # retrieve the true heterogeneous treatment effect
@@ -263,16 +271,19 @@ create_multileveldata_D2 <- function(cluster_num = 150,
                                      cluster_size = 25,
                                      R_var = 18, 
                                      V_var = 0.0001,
-                                     U_var = 0.0001, 
+                                     U_var = 0.0001,
+                                     tau_var = 0,
                                      clustereffect=FALSE)
 ```
 
 **Argument**  
 - `cluster_num`: an integer to define the number of clusters.
-- `cluster_size`: an integer to define the cluster size.
+- `cluster_size_min`: an integer to define the minimal size of clusters.
+- `cluster_size_max`: an integer to define the maximal size of clusters.
 - `R_var`: a float to define the variance of residual in the outcome model.
 - `V_var`: a float to define the variance of cluster effect in treatment.
 - `U_var`: a float to define the variance of cluster effect in outcome.
+- `tau_var`: a float to define the variance of the variance in the treatment effect;
 - `clustereffect`: logical. To determine whether to generate multilevel data.
 
 **Example**  
@@ -280,11 +291,13 @@ create_multileveldata_D2 <- function(cluster_num = 150,
 # Generate 7500 observations nested in 300 clusters, with the conditional ICC of .105
 # for the outcome model, and .372 for the treatment model.
 df <- create_multileveldata_D2(cluster_num = 300, 
-                                    cluster_size = 25, 
-                                    R_var = 0.6653, # var of residual
-                                    V_var = 1.95, # var of cluster effect in selection
-                                    U_var = 0.0776, # var of cluster effect in outcome
-                                    clustereffect=TRUE)
+                                cluster_size_min = 25,
+                                cluster_size_max = 50,
+                                R_var = 0.6653, # var of residual
+                                V_var = 1.5, # var of cluster effect in selection
+                                U_var = 0.0776, # var of cluster effect in outcome
+                                tau_var = 0, # var of cluster effect in treatment
+                                clustereffect=TRUE)
 
 # retrieve the true heterogeneous treatment effect
 tau <- df$tau
@@ -299,8 +312,8 @@ OTRs_true <- df$policy
 value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
 
 # subset the generated dataframe for model building
-dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22",
-              "X23","S2","A","Y","S_is_1","S_is_2","S_is_3")]
+dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23",
+                "S2","S2_2","A","Y","S_is_1","S_is_2","S_is_3")]
 
 # mutate the dat0 with intersectional sensitive variables
 library(dplyr)
@@ -343,4 +356,5 @@ After running the simulation scripts in section 2.2.2, please run these two file
 ## 4 Updates  
 
 - 2024.09: Repo initialized;
-- 2024.10: Adjusted the layouts, revised the code's comments, changed the parameters' names to be consistent with our paper;  
+- 2024.10: Adjusted the layouts, revised the code's comments, changed the parameters' names to be consistent with our paper;
+- 2025.09: Adjust the code to fit for broader cases: 1) support uneven cluster sizes; 2) support regular GLMM model fitting; 3) adjust the constraining step to be accurately align with our theory.  
