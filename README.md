@@ -357,4 +357,5 @@ After running the simulation scripts in section 2.2.2, please run these two file
 
 - 2024.09: Repo initialized;
 - 2024.10: Adjusted the layouts, revised the code's comments, changed the parameters' names to be consistent with our paper;
-- 2025.09: Adjust the code to fit for broader cases: 1) support uneven cluster sizes; 2) support regular GLMM model fitting; 3) adjust the constraining step to be accurately align with our theory.  
+- 2025.09: Adjust the code to fit for broader cases: 1) support uneven cluster sizes; 2) support regular GLMM model fitting; 3) adjust the constraining step to be accurately align with our theory.
+- 2026.03: Applied the pooled average (i.e., the operator $P_n$ defined in our paper) to value, MSE, and mean unfairness. Updated the simulation 1.
