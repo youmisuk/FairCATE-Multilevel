@@ -1,9 +1,3 @@
-# date: 2025.04.27
-# purpose:
-#     - design 1 simulation in parallel.
-#     - this file is based on the Github version but uses the latest DGP 
-#       and multilevel fitting functions
-
 # NOTE: this file uses parallel computation to run the simulation
 
 library(MASS)
@@ -28,8 +22,34 @@ run_iteration <- function(iter) {
   ###################################################################
   
   library(dplyr)
-  MSE_CATE <- function(tau_hat, tau){
-    return(mean((tau_hat - tau)^2))
+  MSE_CATE <- function(tau_hat, tau, cluster_id){
+    # pooled: MSE within each cluster, then average across clusters
+    clusters <- split(seq_along(tau_hat), cluster_id)
+    cluster_mses <- sapply(clusters, function(idx) mean((tau_hat[idx] - tau[idx])^2))
+    return(mean(cluster_mses))
+  }
+  
+  pooled_unfairness <- function(vec, sensitive, cluster_id){
+    clusters <- split(seq_along(vec), cluster_id)
+    
+    # P_n(S) and P_n(1-S) using cluster-weighted average
+    p1 <- mean(sapply(clusters, function(idx) mean(sensitive[idx])))
+    p0 <- mean(sapply(clusters, function(idx) mean(1 - sensitive[idx])))
+    
+    # P_n{ uf_k * d } = P_n{(1-S)*d}/p0 - P_n{S*d}/p1
+    Pn_s0_d <- mean(sapply(clusters, function(idx) mean((1 - sensitive[idx]) * vec[idx])))
+    Pn_s1_d <- mean(sapply(clusters, function(idx) mean(sensitive[idx] * vec[idx])))
+    
+    return(abs(Pn_s0_d / p0 - Pn_s1_d / p1))
+  }
+  
+  pooled_value <- function(policy, Y1, Y0, cluster_id){
+    # V(d) using P_n: J^{-1} sum_j n_j^{-1} sum_i [d_ij * Y1_ij + (1-d_ij) * Y0_ij]
+    clusters <- split(seq_along(policy), cluster_id)
+    cluster_values <- sapply(clusters, function(idx) {
+      mean(policy[idx] * Y1[idx] + (1 - policy[idx]) * Y0[idx])
+    })
+    return(mean(cluster_values))
   }
   
   # ------------------ #
@@ -38,12 +58,6 @@ run_iteration <- function(iter) {
   
   # 1.1.1, generate simulated data
   
-  # df <- create_multileveldata_D1(cluster_num = 300, 
-  #                                cluster_size = 25, 
-  #                                R_var = 0.6653, # var of residual
-  #                                V_var = 1.95, # var of cluster effect in selection
-  #                                U_var = 0.0776, # var of cluster effect in outcome
-  #                                clustereffect=TRUE)
   df <- create_multileveldata_D1(cluster_num = 300, # number of clusters
                                  cluster_size_min = 20,
                                  cluster_size_max = 50,
@@ -55,7 +69,9 @@ run_iteration <- function(iter) {
   
   
   ATE_true <- mean(df$tau)
-  value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
+  # value_true <- mean(ifelse(df$policy > 0, df$Y1, df$Y0))
+  value_true <- pooled_value(df$policy, df$Y1, df$Y0, df$id)
+  
   # dat0 <- df[,c("id","X11","X12","X13","S1","X14","X21","X22","X23","S2","A","Y")]
   dat0 <- df[, c("id", "X11", "X12", "X13", "S1", "X14", "X21", "X22", "X23", "S2", "S2_2", "A", "Y")]
   
@@ -65,20 +81,22 @@ run_iteration <- function(iter) {
   # extract all the S related columns to save ram and runnning time
   S1 <- dat0$S1
   S2 <- dat0$S2
+  C_id <- dat0$id
   policy <- df$policy
   Y1 <- df$Y1
   Y0 <- df$Y0
   tau <- df$tau
   
   A_random <- rbinom(nrow(dat0), 1, 0.42)
-  value_random <- mean(ifelse(A_random > 0, Y1, Y0))
+  # value_random <- mean(ifelse(A_random > 0, Y1, Y0))
+  value_random <- pooled_value(A_random, Y1, Y0, C_id)
   
   # get the relative utility
   RU_true <- (value_true - value_random ) / value_random
   
-  unfairness_1 <- abs(mean(policy[S1==1]) - mean(policy[S1==0]))
+  unfairness_1 <- pooled_unfairness(policy, S1, C_id)
   
-  unfairness_2 <- abs(mean(policy[S2==1]) - mean(policy[S2==0]))
+  unfairness_2 <- pooled_unfairness(policy, S2, C_id)
   
   # get the average unfairness
   average_unfairness_true <- (unfairness_1 + unfairness_2) / 2
@@ -99,7 +117,9 @@ run_iteration <- function(iter) {
   
   # 1.2.2 retrieve the OTR, value, and ATE
   OTR_BART <- as.numeric(cate.BART > 0)
-  value_BART <- mean(ifelse(OTR_BART > 0, Y1, Y0))
+  #value_BART <- mean(ifelse(OTR_BART > 0, Y1, Y0))
+  value_BART <- pooled_value(OTR_BART, Y1, Y0, C_id)
+  
   ATE_BART <- mean(cate.BART)
   
   # 1.2.3 get the Relative Utility
@@ -107,18 +127,18 @@ run_iteration <- function(iter) {
   
   # 1.2.4 get the Average Unfairness
   
-  unfairness_1 <- abs(mean(OTR_BART[S1==1]) - mean(OTR_BART[S1==0]))
+  unfairness_1 <- pooled_unfairness(OTR_BART, S1, C_id)
   
-  unfairness_2 <- abs(mean(OTR_BART[S2==1]) - mean(OTR_BART[S2==0]))
+  unfairness_2 <- pooled_unfairness(OTR_BART, S2, C_id)
   
   # get the average unfairness
   average_unfairness_bart <- (unfairness_1 + unfairness_2) / 2
   
   # get the CATE_MSE
-  MSE_CATE_BART <- MSE_CATE(cate.BART, tau)
+  MSE_CATE_BART <- MSE_CATE(cate.BART, tau, C_id)
   # get the CATE unfairness
-  unfairness_1 <- abs(mean(cate.BART[S1==1]) - mean(cate.BART[S1==0]))
-  unfairness_2 <- abs(mean(cate.BART[S2==1]) - mean(cate.BART[S2==0]))
+  unfairness_1 <- pooled_unfairness(cate.BART, S1, C_id)
+  unfairness_2 <- pooled_unfairness(cate.BART, S2, C_id)
   
   average_unfairness_bart_CATE <- (unfairness_1 + unfairness_2 ) / 2
   
@@ -143,25 +163,26 @@ run_iteration <- function(iter) {
   
   # 1.3.2 retrieve the estimated OTR, value, and ATE
   OTR_cf <- as.numeric(cate.cf$predictions > 0)
-  value_cf <- mean(ifelse(OTR_cf > 0, Y1, Y0))
+  #value_cf <- mean(ifelse(OTR_cf > 0, Y1, Y0))
+  value_cf <- pooled_value(OTR_cf, Y1, Y0, C_id)
   cate_cf_pre <- cate.cf$predictions
   ATE_cf <- mean(cate_cf_pre)
   
   # 1.3.3 get the Relative Utility
   RU_cf <- (value_cf - value_random ) / value_random
   
-  unfairness_1 <- abs(mean(OTR_cf[S1==1]) - mean(OTR_cf[S1==0]))
+  unfairness_1 <- pooled_unfairness(OTR_cf, S1, C_id)
   
-  unfairness_2 <- abs(mean(OTR_cf[S2==1]) - mean(OTR_cf[S2==0]))
+  unfairness_2 <- pooled_unfairness(OTR_cf, S2, C_id)
   
   # get the average unfairness
   average_unfairness_cf <- (unfairness_1 + unfairness_2 ) / 2
   
   # get the CATE_MSE
-  MSE_CATE_cf <- MSE_CATE(cate_cf_pre, tau)
+  MSE_CATE_cf <- MSE_CATE(cate_cf_pre, tau, C_id)
   # get the CATE unfairness
-  unfairness_1 <- abs(mean(cate_cf_pre[S1==1]) - mean(cate_cf_pre[S1==0]))
-  unfairness_2 <- abs(mean(cate_cf_pre[S2==1]) - mean(cate_cf_pre[S2==0]))
+  unfairness_1 <- pooled_unfairness(cate_cf_pre, S1, C_id)
+  unfairness_2 <- pooled_unfairness(cate_cf_pre, S2, C_id)
   
   average_unfairness_cf_CATE <- (unfairness_1 + unfairness_2 ) / 2
   
@@ -217,25 +238,26 @@ run_iteration <- function(iter) {
   
   # 1.3.2 retrieve the estimated OTR, value, and ATE
   OTR_cf <- as.numeric(cate.cf$predictions > 0)
-  value_cf <- mean(ifelse(OTR_cf > 0, Y1, Y0))
+  #value_cf <- mean(ifelse(OTR_cf > 0, Y1, Y0))
+  value_cf <- pooled_value(OTR_cf, Y1, Y0, C_id)
   cate_cf_pre <- cate.cf$predictions
   
   # 1.3.3 get the Relative Utility
   RU_cf_ps <- (value_cf - value_random ) / value_random
   
-  unfairness_1 <- abs(mean(OTR_cf[S1==1]) - mean(OTR_cf[S1==0]))
+  unfairness_1 <- pooled_unfairness(OTR_cf, S1, C_id)
   
-  unfairness_2 <- abs(mean(OTR_cf[S2==1]) - mean(OTR_cf[S2==0]))
+  unfairness_2 <- pooled_unfairness(OTR_cf, S2, C_id)
   
   # get the average unfairness
   average_unfairness_cf_ps <- (unfairness_1 + unfairness_2 ) / 2
   
   # get the CATE_MSE
-  MSE_CATE_cf_ps <- MSE_CATE(cate_cf_pre, tau)
+  MSE_CATE_cf_ps <- MSE_CATE(cate_cf_pre, tau, C_id)
   
   # get the CATE unfairness
-  unfairness_1 <- abs(mean(cate_cf_pre[S1==1]) - mean(cate_cf_pre[S1==0]))
-  unfairness_2 <- abs(mean(cate_cf_pre[S2==1]) - mean(cate_cf_pre[S2==0]))
+  unfairness_1 <- pooled_unfairness(cate_cf_pre, S1, C_id)
+  unfairness_2 <- pooled_unfairness(cate_cf_pre, S2, C_id)
   
   average_unfairness_cf_CATE_ps <- (unfairness_1 + unfairness_2 ) / 2
   
@@ -249,13 +271,14 @@ run_iteration <- function(iter) {
   tau_hat_init <- ml_fr_out$tau_hat
   # get the OTR, value
   OTR_ml_fr_init <- as.numeric(tau_hat_init > 0)
-  value_ml_fr_init <- mean(ifelse(OTR_ml_fr_init > 0, Y1, Y0))
+  # value_ml_fr_init <- mean(ifelse(OTR_ml_fr_init > 0, Y1, Y0))
+  value_ml_fr_init <- pooled_value(OTR_ml_fr_init, Y1, Y0, C_id)
   
   # condition1: E[d=1|S_is_1=1] - E[d=1|S_is_1=0]
-  unfairness_1_init <- abs(mean(OTR_ml_fr_init[S1==1]) - mean(OTR_ml_fr_init[S1==0]))
+  unfairness_1_init <- pooled_unfairness(OTR_ml_fr_init, S1, C_id)
   
   # condition2: E[d=1|S_is_2=1] - E[d=1|S_is_0=1]
-  unfairness_2_init <- abs(mean(OTR_ml_fr_init[S2==1]) - mean(OTR_ml_fr_init[S2==0]))
+  unfairness_2_init <- pooled_unfairness(OTR_ml_fr_init, S2, C_id)
   
   # get the average unfairness
   average_unfairness_ml_fr_init_1 <- (unfairness_1_init + unfairness_2_init ) / 2
@@ -307,16 +330,17 @@ run_iteration <- function(iter) {
     tau_hat <- ml_fr_out$tau_hat
     # get the OTR, value
     OTR_ml_fr <- as.numeric(tau_hat > 0)
-    value_ml_fr_indv <- mean(ifelse(OTR_ml_fr > 0, Y1, Y0))
+    #value_ml_fr_indv <- mean(ifelse(OTR_ml_fr > 0, Y1, Y0))
+    value_ml_fr_indv <- pooled_value(OTR_ml_fr, Y1, Y0, C_id)
     
     # get the Relative Utility
     RU_ml_fr_indv <- (value_ml_fr_indv - value_random ) / value_random
     
     # condition1: E[d=1|S_is_1=1] - E[d=1|S_is_0=1]
-    unfairness_1 <- abs(mean(OTR_ml_fr[S1==1]) - mean(OTR_ml_fr[S1==0]))
+    unfairness_1 <- pooled_unfairness(OTR_ml_fr, S1, C_id)
     
     # condition2: E[d=1|S_is_2=1] - E[d=1|S_is_0=1]
-    unfairness_2 <- abs(mean(OTR_ml_fr[S2==1]) - mean(OTR_ml_fr[S2==0]))
+    unfairness_2 <- pooled_unfairness(OTR_ml_fr, S2, C_id)
     
     # get the average unfairness
     average_unfairness_ml_fr_indv <- (unfairness_1 + unfairness_2 ) / 2
@@ -339,10 +363,10 @@ run_iteration <- function(iter) {
     FUTR_indv <- - UD_indv / UG_indv
     
     # get the MSE cate
-    MSE_CATE_ml_fr_indv <- MSE_CATE(tau_hat, tau)
+    MSE_CATE_ml_fr_indv <- MSE_CATE(tau_hat, tau, C_id)
     # get the CATE unfairness
-    unfairness_1 <- abs(mean(tau_hat[S1==1]) - mean(tau_hat[S1==0]))
-    unfairness_2 <- abs(mean(tau_hat[S2==1]) - mean(tau_hat[S2==0]))
+    unfairness_1 <- pooled_unfairness(tau_hat, S1, C_id)
+    unfairness_2 <- pooled_unfairness(tau_hat, S2, C_id)
     
     average_unfairness_ml_fr_indv_CATE <- (unfairness_1 + unfairness_2 ) / 2
     
@@ -366,17 +390,18 @@ run_iteration <- function(iter) {
     tau_hat <- ml_fr_out$tau_hat
     # get the OTR, value
     OTR_ml_fr <- as.numeric(tau_hat > 0)
-    value_ml_fr_indv_cluster <- mean(ifelse(OTR_ml_fr > 0, df$Y1, df$Y0))
+    #value_ml_fr_indv_cluster <- mean(ifelse(OTR_ml_fr > 0, df$Y1, df$Y0))
+    value_ml_fr_indv_cluster <- pooled_value(OTR_ml_fr, Y1, Y0, C_id)
     
     # get the Relative Utility
     RU_ml_fr_indv_cluster <- (value_ml_fr_indv_cluster - value_random ) / value_random
     
     # ---------------------------------------------------------------
     # condition1: E[d=1|S_is_1=1] - E[d=1|S_is_0=1]
-    unfairness_1 <- abs(mean(OTR_ml_fr[S1==1]) - mean(OTR_ml_fr[S1==0]))
+    unfairness_1 <- pooled_unfairness(OTR_ml_fr, S1, C_id)
     
     # condition2: E[d=1|S_is_2=1] - E[d=1|S_is_0=1]
-    unfairness_2 <- abs(mean(OTR_ml_fr[S2==1]) - mean(OTR_ml_fr[S2==0]))
+    unfairness_2 <- pooled_unfairness(OTR_ml_fr, S2, C_id)
     
     
     # get the average unfairness
@@ -400,11 +425,11 @@ run_iteration <- function(iter) {
     FUTR_indv_cluster <- - UD_indv_cluster / UG_indv_cluster
     
     # get the MSE cate
-    MSE_CATE_ml_fr_indv_cluster <- MSE_CATE(tau_hat, tau)
+    MSE_CATE_ml_fr_indv_cluster <- MSE_CATE(tau_hat, tau, C_id)
     
     # get the CATE unfairness
-    unfairness_1 <- abs(mean(tau_hat[S1==1]) - mean(tau_hat[S1==0]))
-    unfairness_2 <- abs(mean(tau_hat[S2==1]) - mean(tau_hat[S2==0]))
+    unfairness_1 <- pooled_unfairness(tau_hat, S1, C_id)
+    unfairness_2 <- pooled_unfairness(tau_hat, S2, C_id)
     
     average_unfairness_ml_fr_indv_cluster_CATE <- (unfairness_1 + unfairness_2 ) / 2
     
@@ -483,8 +508,6 @@ time_1 <- Sys.time()
 
 time_1-time_0
 # save the results
+
+
 save(results, file = "results/Simulation_Design_1_results_500_reps.rda")
-
-
-
-
